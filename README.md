@@ -1,2 +1,2 @@
-# Automaton
-A 2d top-down shooter 
+# Runes
+A 2d puzzel shooter
