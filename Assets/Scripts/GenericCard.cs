@@ -19,14 +19,19 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     public int index;
     public Vector2 initialPos;
     public float threshold;
+    public GameObject player;
+    public bool dragging = false;
+    private Vector3 offset;
 
     public void Awake()
     {
         mainCamera = Camera.main;
         canvasGroup = GetComponent<CanvasGroup>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        player = GameObject.FindGameObjectWithTag("Player");
         index = -1;
         threshold = 420f;
+        offset = this.transform.position - player.transform.position;
     }
     public void OnPointerDown(PointerEventData eventData) {
 
@@ -43,6 +48,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
 
         // Convert the screen position to world position and apply it
         transform.position = mainCamera.ScreenToWorldPoint(screenPosition);
+        
 
     }
 
@@ -74,6 +80,8 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
             parent.manager.displayCells(parent.parentWeapon);
 
         }
+        dragging = false;
+        
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -87,6 +95,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         Color color = spriteRenderer.color;
         color.a = 0.5f;
         spriteRenderer.color = color;
+        dragging = true;
     }
 
     public void returnToInitial(){
@@ -104,9 +113,13 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         GetComponent<SpriteRenderer>().sprite = cardImage;
     }
 
+
+    
     // Update is called once per frame
     void Update()
     {
-        
+        if (!dragging || Camera.main.WorldToScreenPoint(transform.position).y > threshold) {
+            this.transform.position = player.transform.position + offset;
+        }
     }
 }
