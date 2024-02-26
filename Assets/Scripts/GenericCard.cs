@@ -6,6 +6,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+//fix threshold checking. now world card that touch the threshold will be tp-ed back
 public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler
 {
     public Cards card;
@@ -36,6 +37,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     public void OnPointerDown(PointerEventData eventData) {
 
     }
+
 
     public void OnDrag(PointerEventData eventData)
     {
@@ -74,12 +76,22 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
                 result.gameObject.GetComponent<Cell>().OnDrop(eventData);
                 break;
             }
+            else if (Camera.main.WorldToScreenPoint(transform.position).y > threshold) { 
+                returnToInitial();
+            }
+         
         }
         if (Camera.main.WorldToScreenPoint(transform.position).y < threshold && parent !=null) {
             parent.parentWeapon.removeFromWeapon(index);
             parent.manager.displayCells(parent.parentWeapon);
-            
-
+        }
+        if (Camera.main.WorldToScreenPoint(transform.position).y < threshold)
+        {
+            spriteRenderer.sortingLayerName = "Default";
+        }
+        else if (parent != null)
+        {
+            spriteRenderer.sortingLayerName = "UI";
         }
 
         dragging = false;
@@ -100,6 +112,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         color.a = 0.5f;
         spriteRenderer.color = color;
         dragging = true;
+        spriteRenderer.sortingLayerName = "UI";
     }
 
     public void returnToInitial(){
@@ -115,6 +128,14 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         this.cardImage = card.cardImage;
 
         GetComponent<SpriteRenderer>().sprite = cardImage;
+
+        if (parent == null)
+        {
+            spriteRenderer.sortingLayerName = "Default";
+        }
+        else {
+            spriteRenderer.sortingLayerName = "UI";
+        }
     }
 
 
@@ -122,7 +143,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     // Update is called once per frame
     void Update()
     {
-        if ((!dragging && Camera.main.WorldToScreenPoint(transform.position).y > threshold)) {
+        if ((!dragging && Camera.main.WorldToScreenPoint(transform.position).y > threshold && parent != null)) {
             this.transform.position = player.transform.position + offset;
         }
     }

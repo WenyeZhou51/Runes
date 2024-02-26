@@ -2668,7 +2668,7 @@ GameObject:
   - component: {fileID: 671652215}
   - component: {fileID: 671652214}
   - component: {fileID: 671652218}
-  m_Layer: 6
+  m_Layer: 7
   m_Name: Tilemap_Collider
   m_TagString: Wall
   m_Icon: {fileID: 0}

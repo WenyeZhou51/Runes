@@ -55,7 +55,7 @@ public class CardsManager : MonoBehaviour
 
     IEnumerator DelayedDisplay()
     {
-        yield return new WaitForSeconds(0.001f);
+        yield return new WaitForSecondsRealtime(0.0001f);
         displayCells(playerWeapons[0]);
     }
 
