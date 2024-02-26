@@ -30,7 +30,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         spriteRenderer = GetComponent<SpriteRenderer>();
         player = GameObject.FindGameObjectWithTag("Player");
         index = -1;
-        threshold = 420f;
+        threshold =420f;
         offset = this.transform.position - player.transform.position;
     }
     public void OnPointerDown(PointerEventData eventData) {
@@ -51,7 +51,6 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         
 
     }
-
     public void OnEndDrag(PointerEventData eventData)
     {
         if (parent == null)
@@ -78,10 +77,13 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         if (Camera.main.WorldToScreenPoint(transform.position).y < threshold && parent !=null) {
             parent.parentWeapon.removeFromWeapon(index);
             parent.manager.displayCells(parent.parentWeapon);
+            
 
         }
         dragging = false;
-        
+        offset = this.transform.position - player.transform.position;
+
+
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -118,7 +120,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     // Update is called once per frame
     void Update()
     {
-        if (!dragging || Camera.main.WorldToScreenPoint(transform.position).y > threshold) {
+        if ((!dragging && Camera.main.WorldToScreenPoint(transform.position).y > threshold)) {
             this.transform.position = player.transform.position + offset;
         }
     }
