@@ -43,16 +43,22 @@ public class CardsManager : MonoBehaviour
 
         if (playerWeapons.Count > 0)
         {
-            displayCells(playerWeapons[0]);
+            StartCoroutine(DelayedDisplay());
         }
         else
         {
             Debug.LogWarning("No weapons found for the player.");
         }
+
     }
 
-   
-    
+
+    IEnumerator DelayedDisplay()
+    {
+        yield return new WaitForSeconds(0.001f);
+        displayCells(playerWeapons[0]);
+    }
+
     public void displayCells(Weapon weapon) {
 
 

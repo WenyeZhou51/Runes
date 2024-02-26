@@ -36,6 +36,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     public void OnPointerDown(PointerEventData eventData) {
 
     }
+
     public void OnDrag(PointerEventData eventData)
     {
 
@@ -80,6 +81,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
             
 
         }
+
         dragging = false;
         offset = this.transform.position - player.transform.position;
 

@@ -14,11 +14,13 @@ public class Cell: MonoBehaviour,IDropHandler
     public float distanceAboveCanvas = 1f;
     public CardsManager manager;
     public int cellIndex;
+    private GameObject player;
 
     //instantiate and set card to card in generic card
     // Start is called before the first frame update
     private void Start()
     {
+        player = GameObject.FindGameObjectWithTag("Player");
         targetCanvas = FindObjectOfType<Canvas>();
         rectTransform = GetComponent<RectTransform>();
         if (containedCard != null) {
@@ -26,7 +28,6 @@ public class Cell: MonoBehaviour,IDropHandler
             Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(Camera.main,rectTransform.position);
 
             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(new Vector3(screenPoint.x, screenPoint.y, Camera.main.nearClipPlane + distanceAboveCanvas));
-
             GameObject genCard = Instantiate(genericCard, worldPosition, Quaternion.identity);
             genCard.GetComponent<GenericCard>().card = containedCard;
             genCard.GetComponent<GenericCard>().parent = this;

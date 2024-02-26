@@ -4,10 +4,11 @@ public class CameraFollow : MonoBehaviour
 {
     private Transform player; // Reference to the player's Transform
 
-    void Start()
+    void Awake()
     {
         // Find the player by tag and get its transform
         player = GameObject.FindGameObjectWithTag("Player").transform;
+        transform.position = player.position + new Vector3(0, 0, -10);
     }
 
     void Update()
