@@ -25,10 +25,12 @@ public class PlayerController : MonoBehaviour
     }
     private State state;
     private void Awake() { 
+        //Debug.Log("player initialized");
         rb = GetComponent<Rigidbody2D>();
         state = State.Normal;
         Weapons = new List<Weapon>();        
         Weapons.Add(defaultWeaponOne);
+
         
     }
     private void Update()

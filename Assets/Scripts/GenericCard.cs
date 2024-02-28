@@ -23,6 +23,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     public GameObject player;
     public bool dragging = false;
     private Vector3 offset;
+    private bool dropValid = true;
 
     public void Awake()
     {
@@ -33,6 +34,8 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         index = -1;
         threshold =420f;
         offset = this.transform.position - player.transform.position;
+        //Debug.Log("card spawned at:"+transform.position);
+        //Debug.Log("card initialized");
     }
     public void OnPointerDown(PointerEventData eventData) {
 
@@ -88,8 +91,9 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         if (Camera.main.WorldToScreenPoint(transform.position).y < threshold)
         {
             spriteRenderer.sortingLayerName = "Default";
+            spriteRenderer.sortingOrder = 2;
         }
-        else if (parent != null)
+        else if (parent != null )
         {
             spriteRenderer.sortingLayerName = "UI";
         }
@@ -102,7 +106,17 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        initialPos = Camera.main.ScreenToWorldPoint(eventData.position);
+        if (Camera.main.WorldToScreenPoint(transform.position).y > threshold)
+        {
+
+        }
+        else {
+            initialPos = Camera.main.ScreenToWorldPoint(eventData.position);
+        }
+        
+
+
+
         if (parent != null)
         {
             index = parent.GetComponent<Cell>().cellIndex;
@@ -126,6 +140,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         this.cardName = card.cardName;
         this.cardCost = card.cardCost;
         this.cardImage = card.cardImage;
+        offset = this.transform.position - player.transform.position;
 
         GetComponent<SpriteRenderer>().sprite = cardImage;
 
@@ -145,6 +160,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     {
         if ((!dragging && Camera.main.WorldToScreenPoint(transform.position).y > threshold && parent != null)) {
             this.transform.position = player.transform.position + offset;
+
         }
     }
 }
