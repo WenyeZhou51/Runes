@@ -18,6 +18,11 @@ public class PlayerController : MonoBehaviour
     private Vector2 camPos;
     private Vector2 lookDir;
     public Weapon defaultWeaponOne;
+    public float health;
+    public float healthMax = 100f;
+    public float mana;
+    public float manaRegen = 1f;
+    public float manaMax = 100f;
 
     private enum State { 
         Normal,
@@ -30,6 +35,8 @@ public class PlayerController : MonoBehaviour
         state = State.Normal;
         Weapons = new List<Weapon>();        
         Weapons.Add(defaultWeaponOne);
+        mana = manaMax;
+        health = healthMax;
 
         
     }
@@ -40,8 +47,16 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButton(0)) {
             Attack(this.transform.position,this.transform.rotation);
         }
-  
- 
+        if (mana < manaMax)
+        {
+            mana += manaRegen * Time.deltaTime;
+        }
+        else {
+            mana = manaMax;
+        }
+
+
+
 
 
     }
@@ -82,6 +97,8 @@ public class PlayerController : MonoBehaviour
         lookDir = camPos - rb.position;
         float angle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg;
         rb.rotation = angle;
+
+
 
     }
 

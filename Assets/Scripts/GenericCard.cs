@@ -13,6 +13,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     private Sprite cardImage;
     private int cardCost;
     private string cardName;
+    private float manaCost;
     private Camera mainCamera;
     private CanvasGroup canvasGroup;
     private SpriteRenderer spriteRenderer;
@@ -136,10 +137,11 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
 
     private void Start()
     {
-        this.cardImage = card.cardImage;
-        this.cardName = card.cardName;
-        this.cardCost = card.cardCost;
-        this.cardImage = card.cardImage;
+        this.cardImage = card.getCardImage();
+        this.cardName = card.getCardName();
+        this.cardCost = card.getDelay();
+        this.cardImage = card.getCardImage();
+        this.manaCost = card.getManaCost();
         offset = this.transform.position - player.transform.position;
 
         GetComponent<SpriteRenderer>().sprite = cardImage;
