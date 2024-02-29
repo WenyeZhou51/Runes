@@ -24,7 +24,6 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     public GameObject player;
     public bool dragging = false;
     private Vector3 offset;
-    private bool dropValid = true;
 
     public void Awake()
     {
