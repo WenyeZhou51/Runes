@@ -7,16 +7,18 @@ using static UnityEngine.EventSystems.EventTrigger;
 
 public class HomingScript : MonoBehaviour {
 
-    public float homingForce= 2000;
+    public float homingForce;
     public float homingRadius = 3f;  
     public string targetTag = "Enemy"; 
     private Transform target;        
     private Rigidbody2D rb;
-    private float maxVelocity = 50;
+    private float maxVelocity;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        homingForce = rb.velocity.magnitude * 40;
+        maxVelocity = rb.velocity.magnitude;
     }
     private void FixedUpdate()
     {

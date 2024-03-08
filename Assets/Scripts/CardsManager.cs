@@ -18,10 +18,12 @@ public class CardsManager : MonoBehaviour
     private RectTransform panelRect;
     private Camera mainCamera;
     public float threshold;
+    private Canvas myCanvas;
     private void Awake()
     {
         cmRect = GetComponent<RectTransform>();
         panelRect = panel.GetComponent<RectTransform>();
+        myCanvas = FindObjectOfType<Canvas>();
         mainCamera = Camera.main;
         threshold = 420f;
         
@@ -37,22 +39,27 @@ public class CardsManager : MonoBehaviour
 
         PlayerController playerController = player.GetComponent<PlayerController>();
         playerWeapons = playerController.getWeapons();
-
+        myCanvas = FindObjectOfType<Canvas>();
 
 
 
         if (playerWeapons.Count > 0)
         {
+            myCanvas.enabled = false;
+            myCanvas.enabled = true;
+            //myCanvas.worldCamera = Camera.main;
             displayCells(playerWeapons[0]);
         }
         else
         {
             Debug.LogWarning("No weapons found for the player.");
         }
+
     }
 
-   
-    
+
+
+
     public void displayCells(Weapon weapon) {
 
 

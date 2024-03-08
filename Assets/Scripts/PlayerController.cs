@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody2D rb;
     private Vector2 moveDir ;
     private Vector2 rollDir ;
-    private Vector2 lastMoveDir;    [SerializeField] private float moveSpeed = 350;
+    private Vector2 lastMoveDir;    
+    [SerializeField] private float moveSpeed = 350;
     private float rollSpeed;
     [SerializeField] private float maxRollSpeed = 1500;
     [SerializeField] private float rollDelay = 0.7f;
@@ -18,6 +20,15 @@ public class PlayerController : MonoBehaviour
     private Vector2 camPos;
     private Vector2 lookDir;
     public Weapon defaultWeaponOne;
+    private float health;
+    private float healthMax = 100f;
+    public float mana;
+    private float manaRegen = 50f;
+    private float manaMax = 100f;
+    public GameObject healthBar;
+    public GameObject manaBar;
+    private UnityEngine.UI.Slider hpSlider;
+    private UnityEngine.UI.Slider manaSlider;
 
     private enum State { 
         Normal,
@@ -25,10 +36,21 @@ public class PlayerController : MonoBehaviour
     }
     private State state;
     private void Awake() { 
+        //Debug.Log("player initialized");
         rb = GetComponent<Rigidbody2D>();
         state = State.Normal;
         Weapons = new List<Weapon>();        
         Weapons.Add(defaultWeaponOne);
+        mana = manaMax;
+        health = healthMax;
+        hpSlider = healthBar.GetComponent<UnityEngine.UI.Slider>();
+        manaSlider = manaBar.GetComponent<UnityEngine.UI.Slider>();
+        hpSlider.maxValue = healthMax;
+        hpSlider.value = health;
+        manaSlider.maxValue = manaMax;
+        manaSlider.value = mana;
+       
+
         
     }
     private void Update()
@@ -38,8 +60,16 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButton(0)) {
             Attack(this.transform.position,this.transform.rotation);
         }
-  
- 
+        if (mana < manaMax)
+        {
+            mana += manaRegen * Time.deltaTime;
+        }
+        else {
+            mana = manaMax;
+        }
+        manaSlider.value = mana;
+
+
 
 
     }
@@ -80,6 +110,8 @@ public class PlayerController : MonoBehaviour
         lookDir = camPos - rb.position;
         float angle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg;
         rb.rotation = angle;
+
+
 
     }
 
@@ -154,5 +186,7 @@ public class PlayerController : MonoBehaviour
 
         
     }
+
+
 
 }

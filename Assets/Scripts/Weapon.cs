@@ -11,10 +11,10 @@ public class Weapon : MonoBehaviour
     //public int cardSlots;
     public List<Cards> cards;
     public int index = 0;
-    private Transform player;
     private float nextAttack = 0;
     public int size;
     public int reloadTime;
+    public GameObject player;
     [SerializeField] List<Cards> defaultCards;
     public void addToWeapon(Cards card, int insertIndex) {
         if (insertIndex>=0 && insertIndex < size) {
@@ -35,8 +35,8 @@ public class Weapon : MonoBehaviour
     }
     private void Awake()
     {
+        player = GameObject.FindGameObjectWithTag("Player");    
         cards = new List<Cards>();
-        player = GetComponent<Transform>();
         for (int i = 0; i < size; i++) {
             cards.Add(null);
         }
@@ -46,6 +46,7 @@ public class Weapon : MonoBehaviour
             Cards defCard = defaultCards[i];
             this.addToWeapon(defCard,i);
         }
+
 
 
     }
@@ -60,59 +61,67 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool instant = fal
         if (Time.time >= nextAttack || instant) {
             float fireCost = 0;
             AuxCards curCard;
-            ActionCards actionCard = GetTargetActionCard(index);
+            (ActionCards actionCard, float manaCost) = GetTargetActionCard(index);
             if (actionCard != null)
             {
-                actionCard.Use(position, rotation);
-                //pos, rot is wrong here 
-                while (!(cards[index] is ActionCards))
+                if (manaCost < player.GetComponent<PlayerController>().mana)
                 {
-                    if (cards[index] != null) {
-                        curCard = (AuxCards)cards[index];
-                        curCard.applyMod(actionCard);
-                        fireCost += curCard.getCost();
+                    player.GetComponent<PlayerController>().mana -= manaCost;
+                    actionCard.Use(position, rotation);
+                    while (!(cards[index] is ActionCards))
+                    {
+                        if (cards[index] != null)
+                        {
+                            curCard = (AuxCards)cards[index];
+                            curCard.applyMod(actionCard);
+                            fireCost += curCard.getDelay();
+                        }
+
+                        if (index < cards.Count - 1)
+                        {
+                            index++;
+                        }
+                        else
+                        {
+                            if (instant)
+                            {
+                                Debug.Log("truncuted");
+                                return;
+                            }
+                            index = 0;
+                            if (reloaded == false)
+                            {
+                                fireCost += reloadTime;
+                            }
+                            reloaded = true;
+                        }
                     }
-                    
+
+                    fireCost += actionCard.getDelay();
+                    nextAttack = Time.time + fireCost / 100f;
+
                     if (index < cards.Count - 1)
                     {
                         index++;
                     }
                     else
                     {
-                        if (instant) {
-                            Debug.Log("truncuted");
-                            return;
-                        }
                         index = 0;
-                        if (reloaded == false) {
-                            fireCost += reloadTime;
-                        }
-                        reloaded = true;
                     }
                 }
-
-                fireCost += actionCard.getCost();
-                nextAttack = Time.time + fireCost / 100f;
-                
-                if (index < cards.Count - 1)
-                {
-                    index++;
-                }
-                else
-                {
-                    index = 0;
-                }
+               
             }
             
         }
         
     }
-    //do flag modification in weapons class
-    private ActionCards GetTargetActionCard(int curIndex) {
+
+    private (ActionCards,float) GetTargetActionCard(int curIndex) {
+        float manaCost = 0;
         int entryIndex = curIndex;
         if (cards[curIndex] != null && cards[curIndex] is ActionCards)
         {
-            return (ActionCards)cards[curIndex];
+            return ((ActionCards)cards[curIndex], cards[curIndex].getManaCost());
         }
         else {
             if (curIndex < cards.Count - 1)
@@ -123,6 +132,10 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool instant = fal
             {
                 curIndex = 0;
             }
+            if (cards[curIndex] != null) {
+                manaCost += cards[curIndex].getManaCost();
+            }
+
         }
         
         while (!(cards[curIndex] is ActionCards) && curIndex != entryIndex) {
@@ -133,8 +146,12 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool instant = fal
             else { 
                 curIndex = 0;
             }
-            
+            if (cards[curIndex] != null)
+            {
+                manaCost += cards[curIndex].getManaCost();
+            }
+
         }
-        return (ActionCards) cards[curIndex];
+        return ((ActionCards) cards[curIndex],manaCost);
     }
 }

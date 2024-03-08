@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Arrow
   m_EditorClassIdentifier: 
   cardName: Arrow
-  cardCost: 5
+  delay: 5
+  manaCost: 1
   cardImage: {fileID: 21300000, guid: e227e754e28eb8345a764aa6940738c0, type: 3}
   bullet: {fileID: 4755530488306438924, guid: 3dd8532c054d995439749fa4603e90d8, type: 3}

@@ -14,23 +14,43 @@ public class Cell: MonoBehaviour,IDropHandler
     public float distanceAboveCanvas = 1f;
     public CardsManager manager;
     public int cellIndex;
+    private GameObject player;
+    private Camera mainCamera;
+      
 
     //instantiate and set card to card in generic card
     // Start is called before the first frame update
+   
     private void Start()
     {
-        targetCanvas = FindObjectOfType<Canvas>();
-        rectTransform = GetComponent<RectTransform>();
-        if (containedCard != null) {
 
-            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(Camera.main,rectTransform.position);
+       
+        
+        player = GameObject.FindGameObjectWithTag("Player");
+        mainCamera = Camera.main;
+        if (mainCamera.GetComponent<CameraFollow>().initialized) {
 
-            Vector3 worldPosition = Camera.main.ScreenToWorldPoint(new Vector3(screenPoint.x, screenPoint.y, Camera.main.nearClipPlane + distanceAboveCanvas));
+            targetCanvas = FindObjectOfType<Canvas>();
+            rectTransform = GetComponent<RectTransform>();
+            if (containedCard != null)
+            {
 
-            GameObject genCard = Instantiate(genericCard, worldPosition, Quaternion.identity);
-            genCard.GetComponent<GenericCard>().card = containedCard;
-            genCard.GetComponent<GenericCard>().parent = this;
+                Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(mainCamera, rectTransform.position);
+                //Debug.Log("camera location according to cell:" + mainCamera.transform.position);
+                Vector3 worldPosition = Camera.main.ScreenToWorldPoint(new Vector3(screenPoint.x, screenPoint.y, Camera.main.nearClipPlane + distanceAboveCanvas));
+                //Debug.Log("cell world position:" + worldPosition);
+                GameObject genCard = Instantiate(genericCard, worldPosition, Quaternion.identity);
+                genCard.GetComponent<GenericCard>().card = containedCard;
+                genCard.GetComponent<GenericCard>().parent = this;
+            }
+            
+            
         }
+        else
+        {
+            Debug.Log("camera not initialized");
+        }
+
     }
 
     public void OnDrop(PointerEventData eventData)
@@ -73,12 +93,5 @@ public class Cell: MonoBehaviour,IDropHandler
     }
 
 
-
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 
 }
