@@ -23,7 +23,7 @@ public class PlayerController : MonoBehaviour
     private float health;
     private float healthMax = 100f;
     public float mana;
-    private float manaRegen = 10f;
+    private float manaRegen = 50f;
     private float manaMax = 100f;
     public GameObject healthBar;
     public GameObject manaBar;

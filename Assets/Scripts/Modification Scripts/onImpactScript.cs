@@ -11,6 +11,8 @@ public class onImpactScript: MonoBehaviour
     private Rigidbody2D rb;
     private GameObject player;
     private Bullet bullet;
+    private Vector2 direction;
+    private bool isColliding = false;
 
     private void Awake()
     {
@@ -22,10 +24,14 @@ public class onImpactScript: MonoBehaviour
         
     }
 
-    public Vector2 ReverseVector(Vector2 vector)
+    private void FixedUpdate()
     {
-        return new Vector2(-vector.x, -vector.y);
+        if (!isColliding) {
+            direction = rb.velocity.normalized;
+        }
+        
     }
+
 
     // Function to reverse a 3D vector
     public Vector3 ReverseVector(Vector3 vector)
@@ -59,19 +65,16 @@ public class onImpactScript: MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Enemy") || collision.gameObject.CompareTag("Wall"))
         {
-            Debug.Log("Collision detected");
-            Vector2 direction = transform.position - collision.transform.position;
+            isColliding = true;
+            Vector2 direction =  -1*collision.relativeVelocity.normalized;
             Vector2 collisionNormal = collision.contacts[0].normal;
             Vector2 reflected = Vector2.Reflect(direction, collisionNormal);
-            Vector2 finalDir = reflected + RandomDirection(5);
-            Vector2 reversed = ReverseVector(direction);
-            Vector2 awayDir = (reversed + reflected).normalized;
-            float spawnDist = 1f;
+            Vector2 finalDir = reflected;
+            Vector2 awayDir = (direction*-1+ reflected).normalized;
+            float spawnDist = 0.5f;
             Vector2 collisionPoint = collision.contacts[0].point;
             Vector2 spawnPosition = collisionPoint + awayDir * spawnDist;
-            Debug.Log("spawn position"+spawnPosition+"finalDir" + finalDir);
             player.GetComponent<PlayerController>().Attack(spawnPosition, Vector2ToQuaternion(finalDir), true);
-            Debug.Log("finished spawan");
 
         }
     }
