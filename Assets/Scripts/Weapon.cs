@@ -52,16 +52,50 @@ public class Weapon : MonoBehaviour
     }
     
 
-public void fireWeapon(Vector3 position, Quaternion rotation, bool instant = false ) {
+public void fireWeapon(Vector3 position, Quaternion rotation, bool external = false ) {
         
         //pos rot is right here
-        bool reloaded = false;
+
+        AuxCards curCard;
+        if (GetTargetActionCard(index) == (null,float.NaN))
+        {
+            return;
+        }
+        (ActionCards actionCard, float manaCost) = GetTargetActionCard(index);
+        
         //add time delay
         //time delay messing with the onImpact code.
-        if (Time.time >= nextAttack || instant) {
+        if (external)
+        {
+            if (actionCard != null)
+            {
+                actionCard.Use(position, rotation);
+                while (!(cards[index] is ActionCards))
+                {
+                    if (cards[index] != null)
+                    {
+                        curCard = (AuxCards)cards[index];
+                        curCard.applyMod(actionCard);
+                    }
+
+                    if (index < cards.Count - 1)
+                    {
+                        index++;
+                    }
+                    else
+                    { 
+                        index = 0;
+                        return;
+                    }
+                }
+            }
+        }
+        else if (Time.time >= nextAttack)
+        {
+            bool reloaded = false;
             float fireCost = 0;
-            AuxCards curCard;
-            (ActionCards actionCard, float manaCost) = GetTargetActionCard(index);
+
+
             if (actionCard != null)
             {
                 if (manaCost < player.GetComponent<PlayerController>().mana)
@@ -83,7 +117,7 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool instant = fal
                         }
                         else
                         {
-                            if (instant)
+                            if (external)
                             {
                                 Debug.Log("truncuted");
                                 return;
@@ -109,14 +143,17 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool instant = fal
                         index = 0;
                     }
                 }
-               
+
             }
-            
+
         }
-        
+
+
+
+
     }
 
-    private (ActionCards,float) GetTargetActionCard(int curIndex) {
+    public (ActionCards,float) GetTargetActionCard(int curIndex) {
         float manaCost = 0;
         int entryIndex = curIndex;
         if (cards[curIndex] != null && cards[curIndex] is ActionCards)
@@ -151,6 +188,9 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool instant = fal
                 manaCost += cards[curIndex].getManaCost();
             }
 
+        }
+        if (entryIndex == curIndex) {
+            return (null,float.NaN);
         }
         return ((ActionCards) cards[curIndex],manaCost);
     }
