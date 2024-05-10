@@ -29,6 +29,9 @@ public class PlayerController : MonoBehaviour
     public GameObject manaBar;
     private UnityEngine.UI.Slider hpSlider;
     private UnityEngine.UI.Slider manaSlider;
+    private Animator animator;
+    private bool attacking = false;
+    private Transform firepoint;
 
     private enum State { 
         Normal,
@@ -38,6 +41,8 @@ public class PlayerController : MonoBehaviour
     private void Awake() { 
         //Debug.Log("player initialized");
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        firepoint = transform.Find("FirePoint");
         state = State.Normal;
         Weapons = new List<Weapon>();        
         Weapons.Add(defaultWeaponOne);
@@ -57,8 +62,13 @@ public class PlayerController : MonoBehaviour
     {
         handleMovementInput();
         TrackCurWeapon();
-        if (Input.GetMouseButton(0)) {
-            Attack(this.transform.position,this.transform.rotation);
+        if (Input.GetMouseButton(0))
+        {
+            Attack(firepoint.transform.position, firepoint.transform.rotation);
+            attacking = true;
+        }
+        else {
+            attacking = false;
         }
         if (mana < manaMax)
         {
@@ -83,7 +93,7 @@ public class PlayerController : MonoBehaviour
     }
     public void Attack(Vector3 position,Quaternion rotation,bool instant = false) {
 
-        if (this.transform.position != position) { Debug.Log("called by onImpact"); }
+        if (firepoint.transform.position != position) { Debug.Log("called by onImpact"); }
         curWeapon.fireWeapon(position,rotation, instant);
     }
 
@@ -107,9 +117,14 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         handleMovement();
-        lookDir = camPos - rb.position;
-        float angle = Mathf.Atan2(lookDir.y, lookDir.x) * Mathf.Rad2Deg;
-        rb.rotation = angle;
+        lookDir = (camPos - rb.position).normalized;
+        animator.SetFloat("horizontal_dir", lookDir.x);
+        animator.SetFloat("vertical_dir", lookDir.y);
+        firepoint.transform.position = this.transform.position + new Vector3(lookDir.x,lookDir.y,0);
+        float angle = Mathf.Atan2(lookDir.y,lookDir.x)* Mathf.Rad2Deg;
+        firepoint.rotation = Quaternion.Euler(0, 0, angle);
+        //firepoint.rotation = Quaternion.LookRotation(lookDir,Vector3.up);
+        //rb.rotation = angle;
 
 
 
@@ -147,6 +162,8 @@ public class PlayerController : MonoBehaviour
                 {
                     lastMoveDir = moveDir;
                 }
+                
+
                 if (Input.GetKeyDown(KeyCode.LeftShift) && Time.time >= nextRoll)
                 {
                     rollDir = lastMoveDir;
@@ -174,15 +191,22 @@ public class PlayerController : MonoBehaviour
 
     private void handleMovement()
     {
-        switch (state)
+        if (!attacking)
         {
-            case State.Normal:
-                rb.velocity = moveDir * moveSpeed * Time.deltaTime;
-                break;
-            case State.Rolling:
-                rb.velocity = rollDir * rollSpeed * Time.deltaTime;
-                break;
+            switch (state)
+            {
+                case State.Normal:
+                    rb.velocity = moveDir * moveSpeed * Time.deltaTime;
+                    break;
+                case State.Rolling:
+                    rb.velocity = rollDir * rollSpeed * Time.deltaTime;
+                    break;
+            }
         }
+        else {
+            rb.velocity = new Vector2(0, 0);
+        }
+
 
         
     }
