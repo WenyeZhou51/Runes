@@ -66,10 +66,12 @@ public class PlayerController : MonoBehaviour
         {
             Attack(firepoint.transform.position, firepoint.transform.rotation);
             attacking = true;
+            
         }
         else {
             attacking = false;
         }
+        animator.SetBool("attacking", attacking);
         if (mana < manaMax)
         {
             mana += manaRegen * Time.deltaTime;
@@ -118,8 +120,8 @@ public class PlayerController : MonoBehaviour
     {
         handleMovement();
         lookDir = (camPos - rb.position).normalized;
-        animator.SetFloat("horizontal_dir", lookDir.x);
-        animator.SetFloat("vertical_dir", lookDir.y);
+        animator.SetFloat("lookDirX", lookDir.x);
+        animator.SetFloat("lookDirY", lookDir.y);
         firepoint.transform.position = this.transform.position + new Vector3(lookDir.x,lookDir.y,0);
         float angle = Mathf.Atan2(lookDir.y,lookDir.x)* Mathf.Rad2Deg;
         firepoint.rotation = Quaternion.Euler(0, 0, angle);
@@ -171,7 +173,10 @@ public class PlayerController : MonoBehaviour
                     rollSpeed = maxRollSpeed;
                     nextRoll = Time.time + rollDelay;
                 }
+                animator.SetFloat("horizontal_dir", moveX);
+                animator.SetFloat("vertical_dir", moveY);
                 break;
+
             case State.Rolling:
                 float rollSpeedDrop = 5f;
                 rollSpeed -= rollSpeed * rollSpeedDrop * Time.deltaTime;

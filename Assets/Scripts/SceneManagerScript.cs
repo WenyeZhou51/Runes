@@ -47,8 +47,12 @@ public class SceneManagerScript : MonoBehaviour
     }
 
     // Update is called once per frame
+    float threshold = Screen.height*0.8f;
     void Update()
     {
-        
+       
     }
+
+
 }
+

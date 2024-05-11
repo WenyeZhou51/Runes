@@ -32,7 +32,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         spriteRenderer = GetComponent<SpriteRenderer>();
         player = GameObject.FindGameObjectWithTag("Player");
         index = -1;
-        threshold =420f;
+        threshold = Screen.height * 0.72f;
         offset = this.transform.position - player.transform.position;
         //Debug.Log("card spawned at:"+transform.position);
         //Debug.Log("card initialized");
@@ -159,9 +159,13 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     // Update is called once per frame
     void Update()
     {
-        if ((!dragging && Camera.main.WorldToScreenPoint(transform.position).y > threshold && parent != null)) {
+        
+        if ((!dragging && Camera.main.WorldToScreenPoint(transform.position).y > threshold && parent != null))
+        {
             this.transform.position = player.transform.position + offset;
 
         }
+
+
     }
 }

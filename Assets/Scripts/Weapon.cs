@@ -55,7 +55,6 @@ public class Weapon : MonoBehaviour
 public void fireWeapon(Vector3 position, Quaternion rotation, bool external = false ) {
         
         //pos rot is right here
-
         AuxCards curCard;
         if (GetTargetActionCard(index) == (null,float.NaN))
         {

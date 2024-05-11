@@ -25,8 +25,8 @@ public class CardsManager : MonoBehaviour
         panelRect = panel.GetComponent<RectTransform>();
         myCanvas = FindObjectOfType<Canvas>();
         mainCamera = Camera.main;
-        threshold = 420f;
-        
+        threshold = Screen.height * 0.72f;
+
     }
     private void Start()
     {
