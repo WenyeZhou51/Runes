@@ -65,7 +65,9 @@ public class PlayerController : MonoBehaviour
         if (Input.GetMouseButton(0))
         {
             Attack(firepoint.transform.position, firepoint.transform.rotation);
-            attacking = true;
+            if (state != State.Rolling) {
+                attacking = true;
+            }
             
         }
         else {
@@ -137,6 +139,7 @@ public class PlayerController : MonoBehaviour
     
 
     private void handleMovementInput() {
+        animator.SetInteger("state", (int)state);
         switch (state)
         {
             case State.Normal:
@@ -196,23 +199,22 @@ public class PlayerController : MonoBehaviour
 
     private void handleMovement()
     {
-        if (!attacking)
+        
+        switch (state)
         {
-            switch (state)
-            {
-                case State.Normal:
+            case State.Normal:
+                if (!attacking)
+                {
                     rb.velocity = moveDir * moveSpeed * Time.deltaTime;
-                    break;
-                case State.Rolling:
-                    rb.velocity = rollDir * rollSpeed * Time.deltaTime;
-                    break;
-            }
+                }
+                else {
+                    rb.velocity = new Vector2(0, 0);
+                }
+                break;
+            case State.Rolling:
+                rb.velocity = rollDir * rollSpeed * Time.deltaTime;
+                break;
         }
-        else {
-            rb.velocity = new Vector2(0, 0);
-        }
-
-
         
     }
 
