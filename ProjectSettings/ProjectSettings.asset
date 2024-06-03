@@ -666,11 +666,11 @@ PlayerSettings:
     m_VersionName: 
   apiCompatibilityLevel: 6
   activeInputHandler: 0
-  cloudProjectId: 
+  cloudProjectId: 43b6567a-296d-4b10-897a-8adcca7807f3
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: 
-  organizationId: 
+  projectName: Rune
+  organizationId: wenye_zhou
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   playerDataPath: 

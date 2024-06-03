@@ -133,13 +133,17 @@ public class Enemy : MonoBehaviour
                 aiPath.destination = dest;
                 break;
             case State.attacking:
+                attackBehavior();
                 break;
             case State.fleeing:
+                fleeBehavior();
                 break;
 
         }
     }
 
+    protected virtual void attackBehavior() { }
+    protected virtual void fleeBehavior() { }
 
 
 

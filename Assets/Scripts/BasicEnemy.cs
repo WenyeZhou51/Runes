@@ -16,5 +16,10 @@ public class BasicEnemy : Enemy
         base.Update();
     }
 
+    protected override void attackBehavior()
+    {
+        base.attackBehavior();
+    }
+
 
 }

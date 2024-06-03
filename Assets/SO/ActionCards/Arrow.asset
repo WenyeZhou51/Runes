@@ -15,5 +15,5 @@ MonoBehaviour:
   cardName: Arrow
   delay: 5
   manaCost: 1
-  cardImage: {fileID: 21300000, guid: 4ac8596e8d400034aa5e57fc5fbd27cd, type: 3}
+  cardImage: {fileID: 21300000, guid: 91f9166c7f12304498cca4813d16b2bf, type: 3}
   bullet: {fileID: 4755530488306438924, guid: 3dd8532c054d995439749fa4603e90d8, type: 3}

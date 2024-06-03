@@ -1,12 +1,8 @@
-using System.Collections;
 using System.Collections.Generic;
-using System.Net;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class CardsManager : MonoBehaviour
 {
-    // Start is called before the first frame update
     List<Weapon> playerWeapons;
     [SerializeField] private GameObject player;
     [SerializeField] private GameObject cell;
@@ -17,23 +13,22 @@ public class CardsManager : MonoBehaviour
     public GameObject panel;
     private RectTransform panelRect;
     private Camera mainCamera;
-    public float threshold;
     private Canvas myCanvas;
+    public float h_shift = -12;
+    public float h_gap = 0.65f;
+    public float v_shift = 14;
+
     private void Awake()
     {
         cmRect = GetComponent<RectTransform>();
         panelRect = panel.GetComponent<RectTransform>();
         myCanvas = FindObjectOfType<Canvas>();
         mainCamera = Camera.main;
-        threshold = Screen.height * 0.72f;
-
     }
+
     private void Start()
     {
-        if (cell == null || player == null)
-        {
-            return;
-        }
+
 
         cellsize = cell.GetComponent<RectTransform>().sizeDelta.x;
 
@@ -41,43 +36,28 @@ public class CardsManager : MonoBehaviour
         playerWeapons = playerController.getWeapons();
         myCanvas = FindObjectOfType<Canvas>();
 
-
-
         if (playerWeapons.Count > 0)
         {
-            myCanvas.enabled = false;
-            myCanvas.enabled = true;
-            //myCanvas.worldCamera = Camera.main;
+
             displayCells(playerWeapons[0]);
-        }
-        else
-        {
-            Debug.LogWarning("No weapons found for the player.");
         }
 
     }
 
-
-
-
-    public void displayCells(Weapon weapon) {
-
-
+    public void displayCells(Weapon weapon)
+    {
         Cell[] toDestroy = FindObjectsOfType<Cell>();
         GenericCard[] toDestroy2 = FindObjectsOfType<GenericCard>();
-        foreach (Cell cell in toDestroy) {
-                Destroy(cell.gameObject);
+        foreach (Cell cell in toDestroy)
+        {
+            Destroy(cell.gameObject);
             
         }
         foreach (GenericCard genericCard in toDestroy2)
         {
-            Vector3 ScreenPoint = mainCamera.WorldToScreenPoint(genericCard.transform.position);
-            if (ScreenPoint.y > threshold)
-            {
-                Destroy(genericCard.gameObject);
-            }
+            Destroy(genericCard.gameObject);
+            Debug.Log("destroyed card");
         }
-        
 
         for (int i = 0; i < weapon.size; i++)
         {
@@ -87,8 +67,7 @@ public class CardsManager : MonoBehaviour
             slot.GetComponent<Cell>().parentWeapon = weapon;
             slot.GetComponent<Cell>().manager = this;
             RectTransform cellRect = slot.GetComponent<RectTransform>();
-            cellRect.anchoredPosition = new Vector2(i * (cellsize*1.2f), 0)+offset;
+            cellRect.anchoredPosition = new Vector2(i * (cellsize * h_gap) + h_shift, v_shift) + offset;
         }
     }
-
 }

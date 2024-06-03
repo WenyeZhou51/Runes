@@ -27,71 +27,84 @@ public class Cell: MonoBehaviour,IDropHandler
        
         
         player = GameObject.FindGameObjectWithTag("Player");
-        mainCamera = Camera.main;
-        if (mainCamera.GetComponent<CameraFollow>().initialized) {
 
-            targetCanvas = FindObjectOfType<Canvas>();
-            rectTransform = GetComponent<RectTransform>();
-            if (containedCard != null)
-            {
 
-                Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(mainCamera, rectTransform.position);
-                //Debug.Log("camera location according to cell:" + mainCamera.transform.position);
-                Vector3 worldPosition = Camera.main.ScreenToWorldPoint(new Vector3(screenPoint.x, screenPoint.y, Camera.main.nearClipPlane + distanceAboveCanvas));
-                //Debug.Log("cell world position:" + worldPosition);
-                GameObject genCard = Instantiate(genericCard, worldPosition, Quaternion.identity);
-                genCard.GetComponent<GenericCard>().card = containedCard;
-                genCard.GetComponent<GenericCard>().parent = this;
-            }
-            
-            
-        }
-        else
+        targetCanvas = FindObjectOfType<Canvas>();
+        rectTransform = GetComponent<RectTransform>();
+        if (containedCard != null)
         {
-            Debug.Log("camera not initialized");
+            GameObject genCard = Instantiate(genericCard, rectTransform);
+            Debug.Log("instantiated"+genCard.name);
+            RectTransform genCardRectTransform = genCard.GetComponent<RectTransform>();
+
+            genCard.GetComponent<GenericCard>().card = containedCard;
+            genCard.GetComponent<GenericCard>().parent = this;
+
+            genCardRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            genCardRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            genCardRectTransform.pivot = new Vector2(0.5f, 0.5f);
+            genCardRectTransform.anchoredPosition = Vector2.zero;
         }
+            
+
+
 
     }
 
     public void OnDrop(PointerEventData eventData)
     {
-        Debug.Log("Dropped on cell: " + cellIndex);
+        if (!RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition, mainCamera))
+        {
+            Debug.Log("Ignored");
+            return;
+        }
+        else {
+            Debug.Log("Dropped on cell: " + cellIndex);
+        }
+        
 
-        // Get the dropped object
         GameObject droppedObject = eventData.pointerDrag;
         GenericCard genCard = droppedObject.GetComponent<GenericCard>();
-        if (genCard.index != -1)
+        if (genCard.initialParent != null)
         {
-            parentWeapon.addToWeapon(genCard.card, cellIndex);
-            parentWeapon.removeFromWeapon(genCard.index);
+            
             if (this.containedCard != null)
             {
-                parentWeapon.addToWeapon(containedCard, genCard.index);
+                parentWeapon.addToWeapon(containedCard, genCard.initialParent.cellIndex);
+                genCard.initialParent.containedCard = this.containedCard;
                 Debug.Log("added from other cell");
             }
-            manager.displayCells(parentWeapon);
-            Destroy(droppedObject.gameObject);
+            parentWeapon.addToWeapon(genCard.card, cellIndex);
+            this.containedCard = genCard.card;
+
         }
         else {
             if (this.containedCard == null)
             {
                 parentWeapon.addToWeapon(genCard.card, cellIndex);
-                Debug.Log("added form outside");
-                manager.displayCells(parentWeapon);
-                Destroy(droppedObject.gameObject);
+                this.containedCard = genCard.card;
+                Debug.Log("added from outside");
             }
-            else {
+            else
+            {
+                Debug.Log("invalid add from outside");
                 genCard.returnToInitial();
             }
-            
         }
-        
-
-        
-        
+            
+ 
+       
+           
         
     }
 
 
 
+
+
+
 }
+
+
+
+
