@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Cell: MonoBehaviour,IDropHandler
+public class Cell: MonoBehaviour
 {
     public Cards containedCard;
     public GameObject genericCard;
@@ -16,11 +16,11 @@ public class Cell: MonoBehaviour,IDropHandler
     public int cellIndex;
     private GameObject player;
     private Camera mainCamera;
-      
+    public bool onDropFinished = false;
 
     //instantiate and set card to card in generic card
     // Start is called before the first frame update
-   
+
     private void Start()
     {
 
@@ -46,28 +46,17 @@ public class Cell: MonoBehaviour,IDropHandler
             genCardRectTransform.anchoredPosition = Vector2.zero;
         }
             
-
+            
 
 
     }
 
-    public void OnDrop(PointerEventData eventData)
-    {
-        if (!RectTransformUtility.RectangleContainsScreenPoint(rectTransform, Input.mousePosition, mainCamera))
-        {
-            Debug.Log("Ignored");
-            return;
-        }
-        else {
-            Debug.Log("Dropped on cell: " + cellIndex);
-        }
-        
 
-        GameObject droppedObject = eventData.pointerDrag;
-        GenericCard genCard = droppedObject.GetComponent<GenericCard>();
+    public void handleDrop(GenericCard genCard) {
+
         if (genCard.initialParent != null)
         {
-            
+
             if (this.containedCard != null)
             {
                 parentWeapon.addToWeapon(containedCard, genCard.initialParent.cellIndex);
@@ -78,7 +67,8 @@ public class Cell: MonoBehaviour,IDropHandler
             this.containedCard = genCard.card;
 
         }
-        else {
+        else
+        {
             if (this.containedCard == null)
             {
                 parentWeapon.addToWeapon(genCard.card, cellIndex);
@@ -91,6 +81,8 @@ public class Cell: MonoBehaviour,IDropHandler
                 genCard.returnToInitial();
             }
         }
+    }
+
             
  
        
@@ -103,7 +95,7 @@ public class Cell: MonoBehaviour,IDropHandler
 
 
 
-}
+
 
 
 

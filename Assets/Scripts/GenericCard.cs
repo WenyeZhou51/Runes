@@ -16,7 +16,6 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     private CanvasGroup canvasGroup;
     private SpriteRenderer spriteRenderer;
     public Cell parent;
-    public int index;
     public Vector2 initialPos;
     public Cell initialParent;
     public GameObject player;
@@ -35,7 +34,6 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         uiCanvas = FindObjectOfType<Canvas>();
         rectTransform = GetComponent<RectTransform>();
         player = GameObject.FindGameObjectWithTag("Player");
-        index = -1;
         
     }
 
@@ -75,7 +73,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     public void ConvertToUI(bool init = false)
     {
 
-       
+        Debug.Log("converting to ui");
         // ensure same position
         if (init)
         {
@@ -84,20 +82,21 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
             isUI = true;
         }
         else {
+            rectTransform.SetParent(uiCanvas.transform, true);
             //ensure same position
             Vector2 screenPos = Camera.main.WorldToScreenPoint(transform.position);
-            RectTransformUtility.ScreenPointToWorldPointInRectangle(rectTransform, screenPos, Camera.main, out Vector3 WorldPos);
-            //parent
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(uiCanvas.transform as RectTransform, screenPos, Camera.main, out Vector3 WorldPos);
             
-            //set pos
-            rectTransform.position = WorldPos;
             //switch to image component
             uiImage.enabled = true;
             spriteRenderer.enabled = false;
+            //set pos
+            rectTransform.position = WorldPos;
+
             //same image size
-            Vector2 spriteSize;
-            spriteSize = spriteRenderer.bounds.size;
-            rectTransform.sizeDelta = spriteSize;
+            Vector2 spriteWorldSize = spriteRenderer.bounds.size;
+            rectTransform.sizeDelta = new Vector2(spriteWorldSize.x / rectTransform.lossyScale.x, spriteWorldSize.y / rectTransform.lossyScale.y);
+
             //tag as UI
             isUI = true;
 
@@ -115,8 +114,6 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(uiCanvas.worldCamera, rectTransform.position);
         float depth = 100f; 
         Vector3 worldPosition = Camera.main.ScreenToWorldPoint(new Vector3(screenPoint.x, screenPoint.y, depth));
-        Debug.Log("Screen Point: " + screenPoint);
-        Debug.Log("World Position: " + worldPosition);
 
         //unparent
         parent = null;
@@ -131,9 +128,6 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         Vector2 sizeDelta = rectTransform.sizeDelta;
         Vector3 lossyScale = rectTransform.lossyScale;
         Vector2 worldSize = new Vector2(sizeDelta.x * lossyScale.x, sizeDelta.y * lossyScale.y);
-        Debug.Log("sizeDelta: " + sizeDelta);
-        Debug.Log("lossyScale: " + lossyScale);
-        Debug.Log("worldSize: " + worldSize);
         this.transform.localScale = worldSize;
         
         //toggle as gameobject
@@ -157,7 +151,6 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log("began drag");
         if(!isUI){ 
             ConvertToUI();
         }
@@ -182,13 +175,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log("End drag");
-        if (parent == null)
-        {
-            index = -1;
-        }
-        canvasGroup.blocksRaycasts = true;
-        
+
 
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
@@ -200,74 +187,40 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
             if (result.gameObject.GetComponent<Cell>() != null)
             {
                 parent = result.gameObject.GetComponent<Cell>();
-                parent.OnDrop(eventData);
+                rectTransform.SetParent(result.gameObject.GetComponent<Cell>().transform);
+                rectTransform.localPosition = Vector3.zero;
+                parent.handleDrop(this);
                 droppedInCell = true;
-                ConvertToUI();
-                Debug.Log("Dropped in cell");
                 break;
+
             }
             if (result.gameObject.GetComponent<CardsBar>() != null) {
                 inBar = true;
             }
         }
-        if (droppedInCell)
-        {
-
-        }
-        else
-        {
+        if (!droppedInCell) {
             if (inBar)
             {
                 returnToInitial();
             }
-            else {
+            else
+            {
 
                 ConvertToGameObject();
-
-                
             }
 
         }
+        
 
- 
 
         dragging = false;
-    }
-    private void DetectCollision()
-    {
-        // Loop through all potential UI elements to check for collision
-        foreach (var potentialTarget in FindObjectsOfType<RectTransform>())
-        {
-            if (potentialTarget == rectTransform)
-                continue; // Skip the dragged element itself
-
-            if (RectTransformUtility.RectangleContainsScreenPoint(potentialTarget, Input.mousePosition, uiCanvas.worldCamera))
-            {
-                // Collision detected
-                HandleCollision(potentialTarget);
-            }
-        }
+        canvasGroup.blocksRaycasts = true;
     }
 
-    private void HandleCollision(RectTransform target)
-    {
-        if (target.GetComponent<Cell>()!=null) {
-            rectTransform.SetParent(target);
-            parent = target.GetComponent<Cell>();
-            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rectTransform.anchoredPosition = Vector2.zero; 
-
-        }
-
-
-
-    }
 
 public void returnToInitial()
     {
-
+        Debug.Log("returning");
         //Vector2 localPoint;
         //RectTransformUtility.ScreenPointToLocalPointInRectangle(
         //    uiCanvas.transform as RectTransform, initialPos, uiCanvas.worldCamera, out localPoint);
