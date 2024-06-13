@@ -54,13 +54,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60317a80a555f5144bad446691da41ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  glyph: {fileID: 0}
+  glyphPopUp: {fileID: 8664228318564742583, guid: 7a6eaa10f24c5334d927273c1ca2d182, type: 3}
   card: {fileID: 0}
   parent: {fileID: 0}
-  index: 0
   initialPos: {x: 0, y: 0}
+  initialParent: {fileID: 0}
   player: {fileID: 0}
   dragging: 0
   isUI: 0
+  uiCanvas: {fileID: 0}
+  cardsize: 50
 --- !u!212 &5133328597473138733
 SpriteRenderer:
   m_ObjectHideFlags: 0

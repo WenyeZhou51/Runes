@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
-public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler
+public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler
 {
     public Cards card;
     private Sprite cardImage;
@@ -24,6 +24,8 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
     public Canvas uiCanvas;
     private Image uiImage;
     private RectTransform rectTransform;
+    private bool initialStateUI;
+    public float cardsize = 50f;
 
     public void Awake()
     {
@@ -44,27 +46,38 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         this.cardCost = card.getDelay();
         this.manaCost = card.getManaCost();
         //set sprite
+        spawnDist = 1f;
         spriteRenderer.sprite = cardImage;
         uiImage.sprite = cardImage;
+        if (glyph != null) {
+            description = glyph.getGlyphDescription();
+        }
         
 
 
+        ConvertToUI(true);
         //if parented to cell, then ui. else gameobject.
         if (parent == null)
         {
+
+            ////ConvertToGameObject();
             spriteRenderer.sortingLayerName = "Default";
-            ConvertToGameObject(true);
-           
+
         }
         else
         {
             spriteRenderer.sortingLayerName = "UI";
 
-            ConvertToUI(true);
         }
-        //might have problems with no initialization for ui/gameobject state
+
     }
 
+    public void setParent(Cell parent) {
+        rectTransform.SetParent(parent.transform);
+        rectTransform.localPosition = Vector3.zero;
+        Debug.Log("new parent set");
+    
+    }
     public void OnPointerDown(PointerEventData eventData)
     {
         //might need later   
@@ -77,8 +90,23 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         // ensure same position
         if (init)
         {
-            rectTransform.anchoredPosition = Vector2.zero;
-            rectTransform.sizeDelta = new Vector2(50f, 50f);
+
+            if (parent != null)
+            {
+                rectTransform.sizeDelta = new Vector2(cardsize, cardsize);
+                rectTransform.anchoredPosition = Vector2.zero;
+                Debug.Log(rectTransform.lossyScale);
+                
+            }
+            else {
+                
+                
+                rectTransform.sizeDelta = new Vector2(cardsize, cardsize);
+                Debug.Log(rectTransform.lossyScale);
+            }
+
+            //rectTransform.SetParent(tempParent.transform);
+            //rectTransform.anchoredPosition = Vector2.zero;s
             isUI = true;
         }
         else {
@@ -92,7 +120,7 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
             spriteRenderer.enabled = false;
             //set pos
             rectTransform.position = WorldPos;
-
+            Debug.Log("later lossy scale" + rectTransform.lossyScale);
             //same image size
             Vector2 spriteWorldSize = spriteRenderer.bounds.size;
             rectTransform.sizeDelta = new Vector2(spriteWorldSize.x / rectTransform.lossyScale.x, spriteWorldSize.y / rectTransform.lossyScale.y);
@@ -106,13 +134,12 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
 
     }
 
-    public void ConvertToGameObject(bool init = false)
+    public void ConvertToGameObject()
     {
-   
 
         // Ensure same position
         Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(uiCanvas.worldCamera, rectTransform.position);
-        float depth = 100f; 
+        float depth = 100f;
         Vector3 worldPosition = Camera.main.ScreenToWorldPoint(new Vector3(screenPoint.x, screenPoint.y, depth));
 
         //unparent
@@ -124,11 +151,18 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         spriteRenderer.enabled = true;
         uiImage.enabled = false;
         // Ensure same size
-
+        
         Vector2 sizeDelta = rectTransform.sizeDelta;
         Vector3 lossyScale = rectTransform.lossyScale;
-        Vector2 worldSize = new Vector2(sizeDelta.x * lossyScale.x, sizeDelta.y * lossyScale.y);
+        Vector2 worldSize;
+
+        worldSize = new Vector2(sizeDelta.x * lossyScale.x, sizeDelta.y * lossyScale.y);
+
+
         this.transform.localScale = worldSize;
+
+
+       
         
         //toggle as gameobject
         isUI = false;
@@ -151,8 +185,14 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if(!isUI){ 
+        initialPos = transform.position;
+        if (!isUI)
+        {
             ConvertToUI();
+            initialStateUI = false;
+        }
+        else {
+            initialStateUI = true;
         }
         if (parent != null)
         {
@@ -165,11 +205,11 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
         else {
             initialParent = null;
         }
-        
+        initialPos = RectTransformUtility.WorldToScreenPoint(Camera.main,this.rectTransform.position);
         UnityEngine.Color color = uiImage.color;
         color.a = 0.5f;
         uiImage.color = color;
-        initialPos = RectTransformUtility.WorldToScreenPoint(uiCanvas.worldCamera, rectTransform.position);
+        
         canvasGroup.blocksRaycasts = false;
     }
 
@@ -220,11 +260,17 @@ public class GenericCard : MonoBehaviour, IPointerDownHandler, IBeginDragHandler
 
 public void returnToInitial()
     {
-        Debug.Log("returning");
-        //Vector2 localPoint;
-        //RectTransformUtility.ScreenPointToLocalPointInRectangle(
-        //    uiCanvas.transform as RectTransform, initialPos, uiCanvas.worldCamera, out localPoint);
-        //rectTransform.anchoredPosition = localPoint;
+        if (initialStateUI) {
+            rectTransform.localPosition = Vector3.zero;
+            rectTransform.SetParent(initialParent.transform);
+            initialParent.handleDrop(this);
+        }
+        else {
+            Vector3 worldpoint;
+            RectTransformUtility.ScreenPointToWorldPointInRectangle(rectTransform,initialPos,Camera.main,out worldpoint);
+            rectTransform.position = worldpoint;
+            ConvertToGameObject();
+        }
     }
 
     void Update()

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public abstract class Cards : ScriptableObject {
+public abstract class Cards : Glyphs {
     [SerializeField] string cardName;
     [SerializeField] private int delay;
     [SerializeField] private float manaCost;

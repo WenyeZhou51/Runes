@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -20,12 +21,16 @@ public class Cell: MonoBehaviour
 
     //instantiate and set card to card in generic card
     // Start is called before the first frame update
-
+    private void Awake()
+    {
+        rectTransform = GetComponent<RectTransform>();
+    }
     private void Start()
     {
+        rectTransform.localScale = Vector2.one;
+        Debug.Log("cell size"+this.rectTransform.sizeDelta);
+        Debug.Log("lossy" + this.rectTransform.lossyScale);
 
-       
-        
         player = GameObject.FindGameObjectWithTag("Player");
 
 
@@ -40,13 +45,9 @@ public class Cell: MonoBehaviour
             genCard.GetComponent<GenericCard>().card = containedCard;
             genCard.GetComponent<GenericCard>().parent = this;
 
-            genCardRectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            genCardRectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            genCardRectTransform.pivot = new Vector2(0.5f, 0.5f);
-            genCardRectTransform.anchoredPosition = Vector2.zero;
+           
         }
-            
-            
+
 
 
     }
@@ -61,6 +62,8 @@ public class Cell: MonoBehaviour
             {
                 parentWeapon.addToWeapon(containedCard, genCard.initialParent.cellIndex);
                 genCard.initialParent.containedCard = this.containedCard;
+                GenericCard curGenCard = GetComponentInChildren<GenericCard>();
+                curGenCard.setParent(genCard.initialParent);
                 Debug.Log("added from other cell");
             }
             parentWeapon.addToWeapon(genCard.card, cellIndex);

@@ -15,7 +15,7 @@ public class CardsManager : MonoBehaviour
     private Camera mainCamera;
     private Canvas myCanvas;
     public float h_shift = -12;
-    public float h_gap = 0.65f;
+    public float h_gap = 1.25f;
     public float v_shift = 14;
 
     private void Awake()
@@ -24,12 +24,13 @@ public class CardsManager : MonoBehaviour
         panelRect = panel.GetComponent<RectTransform>();
         myCanvas = FindObjectOfType<Canvas>();
         mainCamera = Camera.main;
+        cmRect.localScale = Vector3.one;
     }
 
     private void Start()
     {
 
-
+        Debug.Log("cm lossy" + this.cmRect.lossyScale);
         cellsize = cell.GetComponent<RectTransform>().sizeDelta.x;
 
         PlayerController playerController = player.GetComponent<PlayerController>();
@@ -53,11 +54,7 @@ public class CardsManager : MonoBehaviour
             Destroy(cell.gameObject);
             
         }
-        foreach (GenericCard genericCard in toDestroy2)
-        {
-            Destroy(genericCard.gameObject);
-            Debug.Log("destroyed card");
-        }
+
 
         for (int i = 0; i < weapon.size; i++)
         {

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3ae6ca74619d97458e2c244d8f7ce82, type: 3}
+  m_Name: GlyphHoming
+  m_EditorClassIdentifier: 
+  description: homing
+  card: {fileID: 11400000, guid: 913f1fc8dab4105458729d876b34b1de, type: 2}
+  glyphImage: {fileID: 21300000, guid: 3e64778a1d2b18543867189cb6c85a41, type: 3}
