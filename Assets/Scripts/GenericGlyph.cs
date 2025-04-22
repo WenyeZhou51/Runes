@@ -9,54 +9,60 @@ public class GenericGlyph : MonoBehaviour
     public Glyphs glyph;
     public float spawnDist = 0.5f;
     public GameObject glyphPopUp;
-    private GameObject popUp;
+    protected GameObject popUp;
     private SpriteRenderer glyphSpriteRenderer;
-    protected string description;
-    private ScriptableObject glyphCard;
+    private Cards glyphCard;
     private Sprite glyphImage;
+    public string glyphName;
     
 
     // Start is called before the first frame update
     private void Awake()
     {
-        glyphSpriteRenderer = GetComponent<SpriteRenderer>();
-        this.glyphImage = glyph.getGlyphImage();
-        this.description = glyph.getGlyphDescription();
-        this.glyphCard = glyph.getGlyphCard();
-        glyphSpriteRenderer.sprite = glyphImage;
+       
+
 
     }
     void Start()
     {
-        
-        
+        glyphSpriteRenderer = GetComponent<SpriteRenderer>();
+        this.glyphImage = glyph.getGlyphImage();
+        this.glyphCard = glyph.getGlyphCard() as Cards;
+        if (glyphCard != null ) { glyphName = glyphCard.getCardName(); }
+        glyphSpriteRenderer.sprite = glyphImage;
+        DescriptionManager.Instance.RegisterGlyph(this);
 
-        
+
     }
 
-    public void OnMouseOver() {
-        Debug.Log(gameObject.name);
+    public void HandleMouseOver() {
         if (popUp == null) {
-            Debug.Log("instantiated");
             popUp = Instantiate(glyphPopUp);
             popUp.GetComponent<RectTransform>().localPosition = this.transform.position + spawnDist * Vector3.down;
+            GlyphPopUp popUpScript = popUp.GetComponent<GlyphPopUp>();
+
+            if (DescriptionManager.Instance.descriptionMap.TryGetValue(this.glyphName, out string description))
+            {
+                popUpScript.description = description;
+            }
+            else {
+                popUpScript.description = "?";
+            }
+
+            
         }
-       GlyphPopUp popUpScript = popUp.GetComponent<GlyphPopUp>();
-       popUpScript.description = description;
+        
+       
     }
-    public void OnMouseExit()
+    public void HandleMouseExit()
     {
-        Debug.Log("exited");
         if (popUp != null)
         {
             GlyphPopUp popUpScript = popUp.GetComponent<GlyphPopUp>();
             popUpScript.fading = true;
-            Debug.Log("fading!");
             popUp = null;
         }
-        else {
-            Debug.Log("popup is null");
-        }
+
     }
         
 

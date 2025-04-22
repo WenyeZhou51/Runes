@@ -30,7 +30,7 @@ public class CardsManager : MonoBehaviour
     private void Start()
     {
 
-        Debug.Log("cm lossy" + this.cmRect.lossyScale);
+
         cellsize = cell.GetComponent<RectTransform>().sizeDelta.x;
 
         PlayerController playerController = player.GetComponent<PlayerController>();

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class SimpleEnemyBullet : MonoBehaviour
 {
+    [SerializeField] private GameObject enemyAttack;
     // Start is called before the first frame update
     void Start()
     {

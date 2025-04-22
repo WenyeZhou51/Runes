@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df2387aa02a67b6439c590e30fe6ec14, type: 3}
   m_Name: Arrow
   m_EditorClassIdentifier: 
+  description: 
+  card: {fileID: 0}
+  glyphImage: {fileID: 0}
   cardName: Arrow
-  delay: 5
+  delay: 3
   manaCost: 1
-  cardImage: {fileID: 21300000, guid: 91f9166c7f12304498cca4813d16b2bf, type: 3}
+  cardImage: {fileID: 21300000, guid: 1d4a3471f0800f744b0b0eb67dc7cf1d, type: 3}
   bullet: {fileID: 4755530488306438924, guid: 3dd8532c054d995439749fa4603e90d8, type: 3}

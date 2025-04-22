@@ -7,11 +7,12 @@ TagManager:
   - Enemy
   - PlayerBullet
   - Wall
+  - Glyph
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
   - Card

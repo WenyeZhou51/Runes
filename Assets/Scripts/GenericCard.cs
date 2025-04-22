@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using System.Drawing;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
-public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler
+public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler, IEndDragHandler, IDragHandler,IPointerEnterHandler,IPointerExitHandler
 {
     public Cards card;
     private Sprite cardImage;
     private int cardCost;
-    private string cardName;
     private float manaCost;
     private Camera mainCamera;
     private CanvasGroup canvasGroup;
@@ -26,6 +26,7 @@ public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler,
     private RectTransform rectTransform;
     private bool initialStateUI;
     public float cardsize = 50f;
+    private bool pointerOver = false;
 
     public void Awake()
     {
@@ -36,22 +37,26 @@ public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler,
         uiCanvas = FindObjectOfType<Canvas>();
         rectTransform = GetComponent<RectTransform>();
         player = GameObject.FindGameObjectWithTag("Player");
-        
+        DescriptionManager.Instance.RegisterGlyph(this);
+
+    }
+    private void OnDestroy()
+    {
+        DescriptionManager.Instance.UnregisterGlyph(this);
     }
 
     private void Start()
     {
         this.cardImage = card.getCardImage();
-        this.cardName = card.getCardName();
+        this.glyphName = card.getCardName();
         this.cardCost = card.getDelay();
         this.manaCost = card.getManaCost();
         //set sprite
-        spawnDist = 1f;
         spriteRenderer.sprite = cardImage;
         uiImage.sprite = cardImage;
-        if (glyph != null) {
-            description = glyph.getGlyphDescription();
-        }
+
+                    
+
         
 
 
@@ -60,8 +65,9 @@ public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler,
         if (parent == null)
         {
 
-            ////ConvertToGameObject();
+            ConvertToGameObject();
             spriteRenderer.sortingLayerName = "Default";
+            GetComponent<Renderer>().sortingOrder = 1;
 
         }
         else
@@ -78,35 +84,41 @@ public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler,
         Debug.Log("new parent set");
     
     }
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        //might need later   
-    }
+
+
+
 
     public void ConvertToUI(bool init = false)
     {
 
-        Debug.Log("converting to ui");
+
         // ensure same position
         if (init)
         {
 
             if (parent != null)
             {
-                rectTransform.sizeDelta = new Vector2(cardsize, cardsize);
+                Vector3 parentLossyScale = this.parent.GetComponent<RectTransform>().lossyScale;
+                rectTransform.sizeDelta = new Vector2(cardsize/parentLossyScale.x, cardsize/parentLossyScale.y);
+
                 rectTransform.anchoredPosition = Vector2.zero;
-                Debug.Log(rectTransform.lossyScale);
-                
+
+
             }
             else {
-                
-                
-                rectTransform.sizeDelta = new Vector2(cardsize, cardsize);
-                Debug.Log(rectTransform.lossyScale);
+
+                // Set the new parent to the Canvas without preserving the world position
+                float viewportHeight = Camera.main.orthographicSize * 2.0f;
+                float viewportWidth = viewportHeight * Camera.main.aspect;
+
+
+                Vector2 CanvasScale = new Vector2(viewportWidth / uiCanvas.GetComponent<RectTransform>().sizeDelta.x, viewportHeight / uiCanvas.GetComponent<RectTransform>().sizeDelta.y);
+                //
+                rectTransform.sizeDelta = new Vector2(cardsize*CanvasScale.x, cardsize*CanvasScale.y);
+
             }
 
-            //rectTransform.SetParent(tempParent.transform);
-            //rectTransform.anchoredPosition = Vector2.zero;s
+ 
             isUI = true;
         }
         else {
@@ -186,6 +198,7 @@ public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler,
     public void OnBeginDrag(PointerEventData eventData)
     {
         initialPos = transform.position;
+        dragging = true;
         if (!isUI)
         {
             ConvertToUI();
@@ -232,7 +245,7 @@ public class GenericCard : GenericGlyph, IPointerDownHandler, IBeginDragHandler,
                 parent.handleDrop(this);
                 droppedInCell = true;
                 break;
-
+                
             }
             if (result.gameObject.GetComponent<CardsBar>() != null) {
                 inBar = true;
@@ -273,8 +286,55 @@ public void returnToInitial()
         }
     }
 
+    //for ui
+    // add description logic
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (!dragging) {
+            if (popUp == null)
+            {
+                popUp = Instantiate(glyphPopUp);
+                popUp.GetComponent<RectTransform>().localPosition = this.rectTransform.position + spawnDist * Vector3.down;
+                
+
+            }
+            GlyphPopUp popUpScript = popUp.GetComponent<GlyphPopUp>();
+            pointerOver = true;
+
+            if (DescriptionManager.Instance.descriptionMap.TryGetValue(this.glyphName, out string description))
+            {
+                popUpScript.description = description;
+            }
+            else {
+                popUpScript.description = "?";
+            }
+
+        }
+
+    }
+
+    public void OnPointerDown(PointerEventData eventData) {
+        if (pointerOver && eventData.button == PointerEventData.InputButton.Right) {
+            Debug.Log("m1 down on ui");
+            DescriptionManager.Instance.currentGlyph = this;
+            DescriptionManager.Instance.ShowInputField();
+        }
+
+    }
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        //DescriptionManager.Instance.currentGlyph = null;
+        if (popUp != null)
+        {
+            GlyphPopUp popUpScript = popUp.GetComponent<GlyphPopUp>();
+            popUpScript.fading = true;
+            popUp = null;
+        }
+    }
     void Update()
     {
-        // Update logic if necessary
+
+
+
     }
 }

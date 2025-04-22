@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52a270eaee46b0a489565959f471d7d1, type: 3}
+  m_Name: OrbitCard
+  m_EditorClassIdentifier: 
+  description: Makes projectiles orbit around you
+  card: {fileID: 0}
+  glyphImage: {fileID: 0}
+  cardName: Orbit
+  delay: 7
+  manaCost: 15
+  cardImage: {fileID: 21300000, guid: eb693ce9d3186634f854fafcf1d3518d, type: 3}
+  modification: {fileID: 11500000, guid: a4d7e8b6c5f9d2148b87a0f29ef5c123, type: 3}
+  modificationTypeName: OrbitScript, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    PublicKeyToken=null 

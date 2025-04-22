@@ -1,9 +1,16 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using JetBrains.Annotations;
+
+#if UNITY_EDITOR
+using Edgar.Unity.Editor;
+#endif
+
 
 public class PlayerController : MonoBehaviour
 {
@@ -11,9 +18,9 @@ public class PlayerController : MonoBehaviour
     private Vector2 moveDir ;
     private Vector2 rollDir ;
     private Vector2 lastMoveDir;    
-    [SerializeField] private float moveSpeed = 350;
+    [SerializeField] private float moveSpeed;
     private float rollSpeed;
-    [SerializeField] private float maxRollSpeed = 1500;
+    [SerializeField] private float maxRollSpeed = 1400;
     [SerializeField] private float rollDelay = 0.7f;
     private float nextRoll;
     [SerializeField] private Camera cam;
@@ -21,17 +28,22 @@ public class PlayerController : MonoBehaviour
     private Vector2 lookDir;
     public Weapon defaultWeaponOne;
     private float health;
-    private float healthMax = 100f;
     public float mana;
-    private float manaRegen = 50f;
-    private float manaMax = 100f;
     public GameObject healthBar;
     public GameObject manaBar;
+    public GameObject playerTakeDamagePopUp;
     private UnityEngine.UI.Slider hpSlider;
     private UnityEngine.UI.Slider manaSlider;
     private Animator animator;
     private bool attacking = false;
     private Transform firepoint;
+    private GameObject currentHoveredObject = null;
+    public LayerMask interactableLayer;
+    public bool isPaused = false;
+    public float hitPause = 0.25f;
+    public bool invincible = false;
+
+
 
     private enum State { 
         Normal,
@@ -46,46 +58,72 @@ public class PlayerController : MonoBehaviour
         state = State.Normal;
         Weapons = new List<Weapon>();        
         Weapons.Add(defaultWeaponOne);
-        mana = manaMax;
-        health = healthMax;
+        if (MyGameManager.Instance.PlayerPosition != null) {
+            this.transform.position = (Vector3)MyGameManager.Instance.PlayerPosition;
+            MyGameManager.Instance.PlayerPosition = null;
+        }
+
+        moveSpeed = MyGameManager.Instance.MoveSpeed;
+        health = MyGameManager.Instance.Health;
+        mana = MyGameManager.Instance.Mana;
         hpSlider = healthBar.GetComponent<UnityEngine.UI.Slider>();
         manaSlider = manaBar.GetComponent<UnityEngine.UI.Slider>();
-        hpSlider.maxValue = healthMax;
+        hpSlider.maxValue = MyGameManager.Instance.MaxHealth;
         hpSlider.value = health;
-        manaSlider.maxValue = manaMax;
+        manaSlider.maxValue = MyGameManager.Instance.MaxMana;
         manaSlider.value = mana;
-       
-
         
+        // Initialize movement direction vector to prevent null issues
+        moveDir = Vector2.zero;
+        lastMoveDir = Vector2.right; // Default direction
     }
     private void Update()
     {
-        handleMovementInput();
-        TrackCurWeapon();
-        if (Input.GetMouseButton(0))
-        {
-            Attack(firepoint.transform.position, firepoint.transform.rotation);
-            if (state != State.Rolling) {
-                attacking = true;
+        bool dialoguePlaying = false;
+        // Check if DialogueManager exists and get dialogue state
+        if (DialogueManager.GetInstance() != null) {
+            dialoguePlaying = DialogueManager.GetInstance().dialoguePlaying;
+        }
+        
+        if (!dialoguePlaying) {
+            handleMovementInput();
+            DetectMouseOver();
+            TrackCurWeapon();
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                TogglePause();
             }
-            
-        }
-        else {
-            attacking = false;
-        }
-        animator.SetBool("attacking", attacking);
-        if (mana < manaMax)
-        {
-            mana += manaRegen * Time.deltaTime;
-        }
-        else {
-            mana = manaMax;
-        }
-        manaSlider.value = mana;
+            if (Input.GetKeyDown(KeyCode.Q))
+            {
+                Application.Quit();
+            }
+            if (Input.GetMouseButton(0))
+            {
+                Attack(firepoint.transform.position, firepoint.transform.rotation);
+                if (state != State.Rolling)
+                {
+                    attacking = true;
+                }
 
 
-
-
+            }
+            else
+            {
+                attacking = false;
+            }
+            animator.SetBool("attacking", attacking);
+            if (mana < MyGameManager.Instance.MaxMana)
+            {
+                mana += MyGameManager.Instance.ManaRegen * Time.deltaTime;
+                MyGameManager.Instance.Mana = mana;
+            }
+            else
+            {
+                mana = MyGameManager.Instance.MaxMana;
+                MyGameManager.Instance.Mana = mana;
+            }
+            manaSlider.value = mana;
+        }
     }
 
 
@@ -136,7 +174,21 @@ public class PlayerController : MonoBehaviour
 
 
 
-    
+    public void TogglePause()
+    {
+        isPaused = !isPaused;
+
+        if (isPaused)
+        {
+            Time.timeScale = 0f;
+            Debug.Log("Game Paused");
+        }
+        else
+        {
+            Time.timeScale = 1f;
+            Debug.Log("Game Resumed");
+        }
+    }
 
     private void handleMovementInput() {
         animator.SetInteger("state", (int)state);
@@ -181,12 +233,14 @@ public class PlayerController : MonoBehaviour
                 break;
 
             case State.Rolling:
+                invincible = true;
                 float rollSpeedDrop = 5f;
                 rollSpeed -= rollSpeed * rollSpeedDrop * Time.deltaTime;
                 float rollSpeedMin = 300f;
                 if (rollSpeed < rollSpeedMin)
                 {
                     state = State.Normal;
+                    invincible = false;
                 }
                 break;
         }
@@ -218,6 +272,80 @@ public class PlayerController : MonoBehaviour
         
     }
 
+    void DetectMouseOver()
+    {
+        Vector3 mouseScreenPosition = Input.mousePosition;
+        Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(mouseScreenPosition);
+        RaycastHit2D hit = Physics2D.Raycast(mouseWorldPosition, Vector2.zero, Mathf.Infinity, interactableLayer);
+
+
+        
+        if (hit.collider != null)
+        {
+            if (hit.collider.gameObject.GetComponent<GenericGlyph>() != null)
+            {
+
+                currentHoveredObject = hit.collider.gameObject;
+                currentHoveredObject.GetComponent<GenericGlyph>().HandleMouseOver();
+                if (Input.GetMouseButtonDown(1))
+                {
+                    DescriptionManager.Instance.currentGlyph = currentHoveredObject.GetComponent<GenericGlyph>();
+                    DescriptionManager.Instance.ShowInputField();
+
+                }
+            }
+            else
+            {
+                if (currentHoveredObject != null)
+                {
+                    currentHoveredObject.GetComponent<GenericGlyph>().HandleMouseExit();
+                    currentHoveredObject = null;
+                }
+            }
+        }
+        else
+        {
+            if (currentHoveredObject != null)
+            {
+                currentHoveredObject.GetComponent<GenericGlyph>().HandleMouseExit();
+                currentHoveredObject = null;
+            }
+        }
+        
+       
+    }
+
+    public void TakeDamage(int damage) {
+        if (invincible || DialogueManager.GetInstance().dialoguePlaying) { return;  }
+        Debug.Log("taking damage");
+        health -= damage;
+        MyGameManager.Instance.Health = health;
+        StartCoroutine(HitPause(hitPause));
+        GameObject popUp = Instantiate(playerTakeDamagePopUp);
+        popUp.GetComponent<PlayerTakeDamagePopUp>().damageNum = damage;
+        popUp.GetComponent<RectTransform>().position = this.transform.position+0.5f * Vector3.up;
+        hpSlider.value = health;
+        if (health <= 0) { playerDeath(); } 
+    }
+
+    private IEnumerator HitPause( float hitPause ) {
+        Time.timeScale = 0.5f;
+        invincible = true;
+        yield return new WaitForSecondsRealtime(hitPause);
+        invincible = false;
+        Time.timeScale = 1f;
+        
+        // Ensure movement is reset after hit pause
+        if (state == State.Normal) {
+            moveDir = Vector2.zero;
+        }
+    }
+
+    private void playerDeath() {
+        Destroy(gameObject);
+        SceneManagerScript.Instance.restart();
+        Time.timeScale = 1f;
+    }
 
 
 }

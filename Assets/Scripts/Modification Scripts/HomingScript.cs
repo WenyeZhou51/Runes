@@ -49,7 +49,7 @@ public class HomingScript : MonoBehaviour {
         {
             float distance = Vector3.Distance(transform.position, enemy.transform.position);
 
-            if (distance <= homingRadius && distance < closestDistance)
+            if (distance <= homingRadius && distance < closestDistance && !enemy.GetComponent<Enemy>().dying)
             {
                 closestEnemy = enemy.transform;
                 closestDistance = distance;

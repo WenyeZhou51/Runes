@@ -15,7 +15,7 @@ public class Bullet : MonoBehaviour
         creationTime = Time.time; 
         impactScript = GetComponent<onImpactScript>();
     }
-    protected void OnCollisionEnter2D(Collision2D collision)
+    protected virtual void OnCollisionEnter2D(Collision2D collision)
     {
         if (impactScript != null)
         {
@@ -26,14 +26,8 @@ public class Bullet : MonoBehaviour
         {
             if (collision.gameObject.CompareTag("Enemy") || collision.gameObject.CompareTag("Wall"))
             {
-
                 Destroy(gameObject);
             }
         }
-
-
-
-        
-
     }
 }

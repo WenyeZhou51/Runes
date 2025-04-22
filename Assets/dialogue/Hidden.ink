@@ -1,0 +1,4 @@
+CantForgettingRememberWordsHowToSpeak
+RoomDarkWithTheRoomNoSeekWallsNoFloor
+FindThehewhoDwellerStraightDownIntheVoidCannotbeseen
+YouICameSaveBelieveUsInFarAllYou

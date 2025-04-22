@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Pathfinding;
+using BulletHell;
+using static Unity.Burst.Intrinsics.X86.Avx;
+using System.Data.SqlTypes;
 
 public class Enemy : MonoBehaviour
 {
@@ -21,30 +24,53 @@ public class Enemy : MonoBehaviour
     public float stopAttackRadius;
     public float fleeingThreshold;
     public float stopFleeingThreshold;
+    public LayerMask seeThroughLayers;
     public GameObject player;
+    private PathMeasure pathMeasure;
     private AIPath aiPath;
+    private Seeker seeker;
     public Vector2 dest;
     private bool moving;
+    public float distance;
+    public float timer;
+    private float interval = 0.1f;
+    public bool dying = false;
+    private ProjectileEmitterAdvanced emitter;
     
 
     private void Awake()
     {
         player = GameObject.FindWithTag("Player");
         aiPath = this.GetComponent<AIPath>();
+        seeker = GetComponent<Seeker>();
+        emitter = GetComponentInChildren<ProjectileEmitterAdvanced>();
+        pathMeasure = GetComponentInChildren<PathMeasure>();
         curState = State.wandering;
         moving = false;
+
     }
-
-
-    protected virtual void Update()
+    private void Start()
     {
-        onStateUpdate(curState);
-        manageStateTransition();
+        //ProjectileManager.Instance.AddEmitter(GetComponent<ProjectileEmitterAdvanced>(), 1000);
     }
 
 
+    protected virtual void Update() {
+
+        timer += Time.deltaTime;
+
+        if (timer >= interval)
+        {
+            manageStateTransition();
+            timer = 0f;
+        }
+        onStateUpdate(curState);
+        
+    }
+
+   
     protected virtual void manageStateTransition() {
-        float distance = Vector2.Distance(player.transform.position, this.transform.position);
+        distance = pathMeasure.getDistance();
         switch (curState)
         {
             case State.wandering:
@@ -58,9 +84,10 @@ public class Enemy : MonoBehaviour
             case State.chasing:
                 if (distance > deaggroRadius)
                 {
+
                     curState = State.wandering;
                 }
-                if (distance < attackingRadius)
+                if (AttackCondition())
                 {
                     curState = State.attacking;
                 }
@@ -70,7 +97,7 @@ public class Enemy : MonoBehaviour
                 }
                 break;
             case State.attacking:
-                if (distance > stopAttackRadius)
+                if (!AttackCondition())
                 {
                     curState = State.chasing;
                 }
@@ -98,40 +125,29 @@ public class Enemy : MonoBehaviour
 
         }
     }
+
+    protected virtual bool AttackCondition() {
+        return distance < attackingRadius;
+
+    }
     private bool checkValid(Vector3 dest) {
         NNInfo nNInfo = AstarPath.active.GetNearest(dest);
         return nNInfo.node != null && nNInfo.node.Walkable;
     }
 
-    protected virtual void onStateUpdate(State state)
+    //private bool canSeePlayer() { 
+    //    RaycastHit2D = 
+    //}
+    protected void onStateUpdate(State state)
     {
         switch (curState)
         {
             case State.wandering:
-                if (!moving) {
-
-                    moving = true;
-                    Vector2 randDir = new Vector2(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f)).normalized;
-                    dest = transform.position + new Vector3 (randDir.x* Random.Range(0.5f, 2), randDir.y * Random.Range(0.5f, 2),0);
-                    if (checkValid(dest))
-                    {
-                        aiPath.destination = dest;
-                    }
-                    else {
-                        aiPath.destination = transform.position;
-                    }
-                    
-                }
-                if (aiPath.reachedEndOfPath) {
-                    moving = false;
-                }
-                
-
+                wanderBehavior();
                 break;
             case State.chasing:
-                dest = player.transform.position;
-                aiPath.destination = dest;
-                break;
+                chaseBehavior();
+                break; 
             case State.attacking:
                 attackBehavior();
                 break;
@@ -141,12 +157,42 @@ public class Enemy : MonoBehaviour
 
         }
     }
+    protected virtual void wanderBehavior() {
+        if (!moving)
+        {
+
+            moving = true;
+            Vector2 randDir = new Vector2(Random.Range(-1.0f, 1.0f), Random.Range(-1.0f, 1.0f)).normalized;
+            dest = transform.position + new Vector3(randDir.x * Random.Range(0.5f, 2), randDir.y * Random.Range(0.5f, 2), 0);
+            if (checkValid(dest))
+            {
+                aiPath.destination = dest;
+
+            }
+            else
+            {
+                aiPath.destination = transform.position;
+            }
+
+        }
+        if (aiPath.reachedEndOfPath)
+        {
+
+            moving = false;
+        }
+    }
+    protected virtual void chaseBehavior() {
+        moving = false;
+        dest = player.transform.position;
+        aiPath.destination = dest;
+    }
 
     protected virtual void attackBehavior() { }
-    protected virtual void fleeBehavior() { }
+    protected virtual void fleeBehavior()
+    {
 
 
-
+    }
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("PlayerBullet")) {
@@ -155,12 +201,50 @@ public class Enemy : MonoBehaviour
         
     }
 
-    private void takeDamage(int damage) {
-        health -= damage;
-        GameObject popUp = Instantiate(PopUp);
-        popUp.GetComponent<DamagePopUp>().damageNum = damage;
-        popUp.GetComponent<RectTransform>().localPosition = this.transform.position+0.5f*Vector3.up;
-        if (health <= 0) { Destroy(this.gameObject); }
+    public void takeDamage(int damage) {
+        if (!dying)
+        {
+            health -= damage;
+            GameObject popUp = Instantiate(PopUp);
+            popUp.GetComponent<DamagePopUp>().damageNum = damage;
+            popUp.GetComponent<RectTransform>().localPosition = this.transform.position + 0.5f * Vector3.up;
+            if (health <= 0) { die(); }
+        }
+        else {
+            Debug.Log("already dying");
+        }
+
+    }
+
+    private void die() {
+        dying = true;
+        emitter.AutoFire = false;
+        MonoBehaviour[] comps = GetComponents<MonoBehaviour>();
+        foreach (MonoBehaviour c in comps)
+        {
+            if (!(c is ProjectileEmitterAdvanced)) {
+                c.enabled = false;
+            }
+           
+        }
+        Collider2D[] colliders = GetComponents<Collider2D>();
+        foreach (Collider2D col in colliders)
+        {
+            col.enabled = false;
+        }
+
+        Renderer[] renderers = GetComponents<Renderer>();
+        foreach (Renderer rend in renderers)
+        {
+            rend.enabled = false;
+        }
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.simulated = false; // Disables the Rigidbody2D simulation
+        }
+        Destroy(gameObject,5f);
+
     }
 
 }

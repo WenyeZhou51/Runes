@@ -12,8 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52a270eaee46b0a489565959f471d7d1, type: 3}
   m_Name: HomingCard
   m_EditorClassIdentifier: 
+  description: 
+  card: {fileID: 0}
+  glyphImage: {fileID: 0}
   cardName: HomingCard
   delay: 5
   manaCost: 10
-  cardImage: {fileID: 21300000, guid: 526fbd13dd8503147a13e10fa21f84cf, type: 3}
+  cardImage: {fileID: 21300000, guid: eb693ce9d3186634f854fafcf1d3518d, type: 3}
   modification: {fileID: 11500000, guid: 289fa27df0d7b844f928fe0c76a99c75, type: 3}
+  modificationTypeName: HomingScript, Assembly-CSharp, Version=0.0.0.0, Culture=neutral,
+    PublicKeyToken=null

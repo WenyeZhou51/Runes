@@ -28,8 +28,7 @@ public class Cell: MonoBehaviour
     private void Start()
     {
         rectTransform.localScale = Vector2.one;
-        Debug.Log("cell size"+this.rectTransform.sizeDelta);
-        Debug.Log("lossy" + this.rectTransform.lossyScale);
+
 
         player = GameObject.FindGameObjectWithTag("Player");
 
@@ -39,7 +38,6 @@ public class Cell: MonoBehaviour
         if (containedCard != null)
         {
             GameObject genCard = Instantiate(genericCard, rectTransform);
-            Debug.Log("instantiated"+genCard.name);
             RectTransform genCardRectTransform = genCard.GetComponent<RectTransform>();
 
             genCard.GetComponent<GenericCard>().card = containedCard;

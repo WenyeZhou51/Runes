@@ -12,6 +12,10 @@ public abstract class Cards : Glyphs {
     public int getDelay() {
         return this.delay;
     }
+    public void setDelay(int delay)
+    {
+        this.delay = delay;
+    }
     public float getManaCost()
     {
         return this.manaCost;

@@ -8,7 +8,8 @@ using UnityEngine.UIElements;
 
 public class Weapon : MonoBehaviour
 {
-    //public int cardSlots;
+    private static List<Cards> persistentCards;  // Static list to maintain state
+
     public List<Cards> cards;
     public int index = 0;
     private float nextAttack = 0;
@@ -16,52 +17,59 @@ public class Weapon : MonoBehaviour
     public int reloadTime;
     public GameObject player;
     [SerializeField] List<Cards> defaultCards;
-    public void addToWeapon(Cards card, int insertIndex) {
-        if (insertIndex>=0 && insertIndex < size) {
-            cards.RemoveAt(insertIndex);
-            cards.Insert(insertIndex, card);
+
+    private void Awake()
+    {
+        DontDestroyOnLoad(gameObject);
+
+        player = GameObject.FindGameObjectWithTag("Player");
+
+        if (persistentCards == null)
+        {
+            persistentCards = new List<Cards>();
+            for (int i = 0; i < size; i++)
+            {
+                persistentCards.Add(null);
+            }
+
+            for (int i = 0; i < defaultCards.Count; i++)
+            {
+                Cards defCard = defaultCards[i];
+                this.addToWeapon(defCard, i);
+            }
         }
 
+        cards = persistentCards;  // Link the instance cards to the static list
+    }
+
+    public void addToWeapon(Cards card, int insertIndex)
+    {
+        if (insertIndex >= 0 && insertIndex < size)
+        {
+            persistentCards.RemoveAt(insertIndex);
+            persistentCards.Insert(insertIndex, card);
+        }
     }
 
     public void removeFromWeapon(int removeIndex)
     {
-        if (removeIndex >= 0 && removeIndex < size && cards[removeIndex]!=null)
+        if (removeIndex >= 0 && removeIndex < size && persistentCards[removeIndex] != null)
         {
-            cards.RemoveAt(removeIndex);
-            cards.Insert(removeIndex, null);
+            persistentCards.RemoveAt(removeIndex);
+            persistentCards.Insert(removeIndex, null);
         }
-
     }
-    private void Awake()
+
+    public void fireWeapon(Vector3 position, Quaternion rotation, bool external = false)
     {
-        player = GameObject.FindGameObjectWithTag("Player");    
-        cards = new List<Cards>();
-        for (int i = 0; i < size; i++) {
-            cards.Add(null);
-        }
-
-        for (int i = 0; i < defaultCards.Count; i++)
-        {
-            Cards defCard = defaultCards[i];
-            this.addToWeapon(defCard,i);
-        }
-
-
-
-    }
-    
-
-public void fireWeapon(Vector3 position, Quaternion rotation, bool external = false ) {
-        
         //pos rot is right here
         AuxCards curCard;
-        if (GetTargetActionCard(index) == (null,float.NaN))
+        if (GetTargetActionCard(index) == (null, -1, float.NaN))
         {
             return;
         }
-        (ActionCards actionCard, float manaCost) = GetTargetActionCard(index);
-        
+        (ActionCards actionCard, int actionIndex, float manaCost) = GetTargetActionCard(index);
+
         //add time delay
         //time delay messing with the onImpact code.
         if (external)
@@ -69,20 +77,20 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool external = fa
             if (actionCard != null)
             {
                 actionCard.Use(position, rotation);
-                while (!(cards[index] is ActionCards))
+                while (!(persistentCards[index] is ActionCards))
                 {
-                    if (cards[index] != null)
+                    if (persistentCards[index] != null)
                     {
-                        curCard = (AuxCards)cards[index];
+                        curCard = (AuxCards)persistentCards[index];
                         curCard.applyMod(actionCard);
                     }
 
-                    if (index < cards.Count - 1)
+                    if (index < persistentCards.Count - 1)
                     {
                         index++;
                     }
                     else
-                    { 
+                    {
                         index = 0;
                         return;
                     }
@@ -94,23 +102,22 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool external = fa
             bool reloaded = false;
             float fireCost = 0;
 
-
             if (actionCard != null)
             {
                 if (manaCost < player.GetComponent<PlayerController>().mana)
                 {
                     player.GetComponent<PlayerController>().mana -= manaCost;
                     actionCard.Use(position, rotation);
-                    while (!(cards[index] is ActionCards))
+                    while (!(persistentCards[index] is ActionCards))
                     {
-                        if (cards[index] != null)
+                        if (persistentCards[index] != null)
                         {
-                            curCard = (AuxCards)cards[index];
+                            curCard = (AuxCards)persistentCards[index];
                             curCard.applyMod(actionCard);
                             fireCost += curCard.getDelay();
                         }
 
-                        if (index < cards.Count - 1)
+                        if (index < persistentCards.Count - 1)
                         {
                             index++;
                         }
@@ -118,7 +125,7 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool external = fa
                         {
                             if (external)
                             {
-                                Debug.Log("truncuted");
+                                Debug.Log("truncated");
                                 return;
                             }
                             index = 0;
@@ -131,9 +138,13 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool external = fa
                     }
 
                     fireCost += actionCard.getDelay();
+                    if (actionIndex == size - 1)
+                    {
+                        fireCost += reloadTime;
+                    }
                     nextAttack = Time.time + fireCost / 100f;
 
-                    if (index < cards.Count - 1)
+                    if (index < persistentCards.Count - 1)
                     {
                         index++;
                     }
@@ -142,25 +153,21 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool external = fa
                         index = 0;
                     }
                 }
-
             }
-
         }
-
-
-
-
     }
 
-    public (ActionCards,float) GetTargetActionCard(int curIndex) {
+    public (ActionCards, int, float) GetTargetActionCard(int curIndex)
+    {
         float manaCost = 0;
         int entryIndex = curIndex;
-        if (cards[curIndex] != null && cards[curIndex] is ActionCards)
+        if (persistentCards[curIndex] != null && persistentCards[curIndex] is ActionCards)
         {
-            return ((ActionCards)cards[curIndex], cards[curIndex].getManaCost());
+            return ((ActionCards)persistentCards[curIndex], curIndex, persistentCards[curIndex].getManaCost());
         }
-        else {
-            if (curIndex < cards.Count - 1)
+        else
+        {
+            if (curIndex < persistentCards.Count - 1)
             {
                 curIndex++;
             }
@@ -168,29 +175,31 @@ public void fireWeapon(Vector3 position, Quaternion rotation, bool external = fa
             {
                 curIndex = 0;
             }
-            if (cards[curIndex] != null) {
-                manaCost += cards[curIndex].getManaCost();
+            if (persistentCards[curIndex] != null)
+            {
+                manaCost += persistentCards[curIndex].getManaCost();
             }
-
         }
-        
-        while (!(cards[curIndex] is ActionCards) && curIndex != entryIndex) {
-            if (curIndex < cards.Count - 1)
+
+        while (!(persistentCards[curIndex] is ActionCards) && curIndex != entryIndex)
+        {
+            if (curIndex < persistentCards.Count - 1)
             {
                 curIndex++;
             }
-            else { 
+            else
+            {
                 curIndex = 0;
             }
-            if (cards[curIndex] != null)
+            if (persistentCards[curIndex] != null)
             {
-                manaCost += cards[curIndex].getManaCost();
+                manaCost += persistentCards[curIndex].getManaCost();
             }
-
         }
-        if (entryIndex == curIndex) {
-            return (null,float.NaN);
+        if (entryIndex == curIndex)
+        {
+            return (null, -1, float.NaN);
         }
-        return ((ActionCards) cards[curIndex],manaCost);
+        return ((ActionCards)persistentCards[curIndex], curIndex, manaCost);
     }
 }
