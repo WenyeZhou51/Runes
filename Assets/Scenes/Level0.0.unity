@@ -964,6 +964,22 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5133328597473138730, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
+      propertyPath: m_SpriteTilingProperty.newSize.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5133328597473138730, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
+      propertyPath: m_SpriteTilingProperty.newSize.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5133328597473138730, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5133328597473138730, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.y
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5133328597473138731, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
       propertyPath: m_Name
       value: GenericCard (2)
@@ -25126,11 +25142,11 @@ PrefabInstance:
     - target: {fileID: 5133328597473138732, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
       propertyPath: card
       value: 
-      objectReference: {fileID: 11400000, guid: 6f1e7ad9b5c23ef4ca9b8f47d15a90c1, type: 2}
+      objectReference: {fileID: 11400000, guid: 5f4f7a8bcc7b6a245b4cbac9d01a8d15, type: 2}
     - target: {fileID: 5133328597473138732, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
       propertyPath: glyph
       value: 
-      objectReference: {fileID: 11400000, guid: eacc42dfd023c2b4c83485252cda9832, type: 2}
+      objectReference: {fileID: 11400000, guid: 5f4f7a8bcc7b6a245b4cbac9d01a8d15, type: 2}
     - target: {fileID: 5579692872026943713, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5

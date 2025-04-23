@@ -9,7 +9,7 @@ public class ActionCards : Cards
     
     public GameObject bullet;
     private GameObject instance;
-    public void Use(Vector2 useLoc, Quaternion useDir) {
+    public virtual void Use(Vector2 useLoc, Quaternion useDir) {
         instance = Instantiate(bullet, useLoc, useDir);
         
     }

@@ -23,107 +23,120 @@ namespace BulletHell
 		private FoldoutAttribute prevFold;
 		private GUIStyle style;
 
-        private void Awake()
-        {
-            var uiTex_in = Resources.Load<Texture2D>("IN foldout focus-6510");
-            var uiTex_in_on = Resources.Load<Texture2D>("IN foldout focus on-5718");
+		void OnEnable()
+		{
+			// Delay style initialization to avoid null reference when EditorStyles is not ready
+			EditorApplication.delayCall += InitializeStyles;
+			
+			bool pro = EditorGUIUtility.isProSkin;
+			if (!pro)
+			{
+				colors = new Colors();
+				colors.col0 = new Color(0.2f, 0.2f, 0.2f, 1f);
+				colors.col1 = new Color(1, 1, 1, 0.55f);
+				colors.col2 = new Color(0.7f, 0.7f, 0.7f, 1f);
+			}
+			else
+			{
+				colors = new Colors();
+				colors.col0 = new Color(0.2f, 0.2f, 0.2f, 1f);
+				colors.col1 = new Color(1, 1, 1, 0.1f);
+				colors.col2 = new Color(0.25f, 0.25f, 0.25f, 1f);
+			}
 
-            var c_on = Color.white;
+			var t = target.GetType();
+			var typeTree = t.GetTypeTree();
 
-            style = new GUIStyle(EditorStyles.foldout);
+			objectFields = target.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).OrderByDescending(x => typeTree.IndexOf(x.DeclaringType)).ToList();
+			length = objectFields.Count;
 
-            style.overflow = new RectOffset(-10, 0, 3, 0);
-            style.padding = new RectOffset(25, 0, -3, 0);
+			Repaint();
+			initialized = false;
+		}
+		
+		private void InitializeStyles()
+		{
+			try
+			{
+				var uiTex_in = Resources.Load<Texture2D>("IN foldout focus-6510");
+				var uiTex_in_on = Resources.Load<Texture2D>("IN foldout focus on-5718");
+				
+				if (EditorStyles.foldout != null)
+				{
+					style = new GUIStyle(EditorStyles.foldout);
+					
+					style.overflow = new RectOffset(-10, 0, 3, 0);
+					style.padding = new RectOffset(25, 0, -3, 0);
+					
+					var c_on = Color.white;
+					style.active.textColor = c_on;
+					if (uiTex_in != null) style.active.background = uiTex_in;
+					style.onActive.textColor = c_on;
+					if (uiTex_in_on != null) style.onActive.background = uiTex_in_on;
+					
+					style.focused.textColor = c_on;
+					if (uiTex_in != null) style.focused.background = uiTex_in;
+					style.onFocused.textColor = c_on;
+					if (uiTex_in_on != null) style.onFocused.background = uiTex_in_on;
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.LogError("Error initializing editor styles: " + e.Message);
+				style = null;
+			}
+		}
 
-            style.active.textColor = c_on;
-            style.active.background = uiTex_in;
-            style.onActive.textColor = c_on;
-            style.onActive.background = uiTex_in_on;
+		private void OnDisable()
+		{
+			foreach (var cach in cache)
+			{
+				FoldManager.SetFold(cach.Value.atr.Id, cach.Value.expanded);
+				cach.Value.Dispose();
+			}
+		}
 
-            style.focused.textColor = c_on;
-            style.focused.background = uiTex_in;
-            style.onFocused.textColor = c_on;
-            style.onFocused.background = uiTex_in_on;
-        }
-
-        void OnEnable()
-        {
-            bool pro = EditorGUIUtility.isProSkin;
-            if (!pro)
-            {
-                colors = new Colors();
-                colors.col0 = new Color(0.2f, 0.2f, 0.2f, 1f);
-                colors.col1 = new Color(1, 1, 1, 0.55f);
-                colors.col2 = new Color(0.7f, 0.7f, 0.7f, 1f);
-            }
-            else
-            {
-                colors = new Colors();
-                colors.col0 = new Color(0.2f, 0.2f, 0.2f, 1f);
-                colors.col1 = new Color(1, 1, 1, 0.1f);
-                colors.col2 = new Color(0.25f, 0.25f, 0.25f, 1f);
-            }
-
-            var t = target.GetType();
-            var typeTree = t.GetTypeTree();
-
-            objectFields = target.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).OrderByDescending(x => typeTree.IndexOf(x.DeclaringType)).ToList();
-            length = objectFields.Count;
-
-            Repaint();
-            initialized = false;
-        }
-
-        private void OnDisable()
-        {
-            foreach (var cach in cache)
-            {
-                FoldManager.SetFold(cach.Value.atr.Id, cach.Value.expanded);
-                cach.Value.Dispose();
-            }
-        }
-
-        public override void OnInspectorGUI()
+		public override void OnInspectorGUI()
 		{
 			serializedObject.Update();
 
-            if (!initialized)
+			if (!initialized)
 			{
 				for (var i = 0; i < length; i++)
 				{
 					var fold = Attribute.GetCustomAttribute(objectFields[i], typeof(FoldoutAttribute)) as FoldoutAttribute;
-                    
+					
 					Cache c;
 					if (fold == null)
 					{
 						if (prevFold != null && prevFold.FoldEverything)
 						{                            
 							if (!cache.TryGetValue(prevFold.Name, out c)) {                               
-                                cache.Add(prevFold.Name, new Cache {atr = prevFold, types = new HashSet<string> {objectFields[i].Name}});
-                                cache[prevFold.Name].expanded = FoldManager.GetFold(prevFold.Id);
-                            }
+								cache.Add(prevFold.Name, new Cache {atr = prevFold, types = new HashSet<string> {objectFields[i].Name}});
+								cache[prevFold.Name].expanded = FoldManager.GetFold(prevFold.Id);
+							}
 							else
 							{
-                                c.types.Add(objectFields[i].Name);
+								c.types.Add(objectFields[i].Name);
 							}
 						}
 						continue;
 					}
 
 					prevFold = fold;
-                    fold.Id = fold.Name + target.GetHashCode().ToString();
+					fold.Id = fold.Name + target.GetHashCode().ToString();
 
-                    if (!cache.TryGetValue(fold.Name, out c))
+					if (!cache.TryGetValue(fold.Name, out c))
 					{
-                        cache.Add(fold.Name, new Cache {atr = fold, types = new HashSet<string> {objectFields[i].Name}});
-                        cache[prevFold.Name].expanded = FoldManager.GetFold(fold.Id);
-                    }
+						cache.Add(fold.Name, new Cache {atr = fold, types = new HashSet<string> {objectFields[i].Name}});
+						cache[prevFold.Name].expanded = FoldManager.GetFold(fold.Id);
+					}
 					else
 					{
 						c.types.Add(objectFields[i].Name);
 					}
 				}
-                
+				
 				var property = serializedObject.GetIterator();
 				var next = property.NextVisible(true);
 				if (next)
@@ -134,7 +147,7 @@ namespace BulletHell
 					} while (property.NextVisible(false));
 				}
 			}
-            
+			
 			if (props.Count == 0)
 			{
 				DrawDefaultInspector();
@@ -156,31 +169,32 @@ namespace BulletHell
 				EditorGUILayout.Space();
 				EditorGUI.DrawRect(new Rect(rect.x - 1, rect.y - 1, rect.width + 1, rect.height + 1), colors.col0);
 				EditorGUI.DrawRect(new Rect(rect.x - 1, rect.y - 1, rect.width + 1, rect.height + 1), colors.col1);
-                
-                pair.Value.expanded = EditorGUILayout.Foldout(pair.Value.expanded, pair.Value.atr.Name, true, style != null ? style : EditorStyles.foldout);
+				
+				// Simple foldout without depending on custom style
+				pair.Value.expanded = EditorGUILayout.Foldout(pair.Value.expanded, pair.Value.atr.Name, true);
  
-                EditorGUILayout.EndVertical();
+				EditorGUILayout.EndVertical();
 
 				rect = EditorGUILayout.BeginVertical();
 
 				EditorGUI.DrawRect(new Rect(rect.x - 1, rect.y - 1, rect.width + 1, rect.height + 1), colors.col2);
 
-                if (pair.Value.expanded)
-                {
-                    for (int i = 0; i < pair.Value.props.Count; i++)
-                    {
-                        EditorGUI.indentLevel = 1;
+				if (pair.Value.expanded)
+				{
+					for (int i = 0; i < pair.Value.props.Count; i++)
+					{
+						EditorGUI.indentLevel = 1;
 
-                        EditorGUILayout.PropertyField(pair.Value.props[i],
-                            new GUIContent(pair.Value.props[i].name.FirstLetterToUpperCase()), true);
-                        if (i == pair.Value.props.Count - 1)
-                            EditorGUILayout.Space();
-                    }
-                }
+						EditorGUILayout.PropertyField(pair.Value.props[i],
+							new GUIContent(pair.Value.props[i].name.FirstLetterToUpperCase()), true);
+						if (i == pair.Value.props.Count - 1)
+							EditorGUILayout.Space();
+					}
+				}
 
 				EditorGUI.indentLevel = 0;
 				EditorGUILayout.EndVertical();
-            }
+			}
 
 			for (var i = 1; i < props.Count; i++)
 			{

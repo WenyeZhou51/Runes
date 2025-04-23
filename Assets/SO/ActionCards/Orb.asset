@@ -16,7 +16,7 @@ MonoBehaviour:
   card: {fileID: 0}
   glyphImage: {fileID: 0}
   cardName: Orb
-  delay: 7
+  delay: 70
   manaCost: 5
   cardImage: {fileID: 21300000, guid: 32b7dd7e8bddcdd4282c5ce14e625bd9, type: 3}
   bullet: {fileID: 4755530488306438924, guid: 16c5c6fa44b2bb94997891a4e32d3bb5, type: 3}

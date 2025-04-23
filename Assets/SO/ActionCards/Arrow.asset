@@ -16,7 +16,7 @@ MonoBehaviour:
   card: {fileID: 0}
   glyphImage: {fileID: 0}
   cardName: Arrow
-  delay: 3
+  delay: 30
   manaCost: 1
   cardImage: {fileID: 21300000, guid: 1d4a3471f0800f744b0b0eb67dc7cf1d, type: 3}
   bullet: {fileID: 4755530488306438924, guid: 3dd8532c054d995439749fa4603e90d8, type: 3}
