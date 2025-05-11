@@ -987,7 +987,7 @@ PrefabInstance:
     - target: {fileID: 5133328597473138732, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
       propertyPath: card
       value: 
-      objectReference: {fileID: 11400000, guid: 7b4d9cdbc1a542a468b21d42ff7e916a, type: 2}
+      objectReference: {fileID: 11400000, guid: 9e66b58c5fe67604daaa0df54972adc6, type: 2}
     - target: {fileID: 5133328597473138732, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
       propertyPath: glyph
       value: 
@@ -27060,7 +27060,7 @@ PrefabInstance:
     - target: {fileID: 5133328597473138732, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
       propertyPath: card
       value: 
-      objectReference: {fileID: 11400000, guid: ca25b8c373e92ce41ba2760ffe6781ba, type: 2}
+      objectReference: {fileID: 11400000, guid: e5d1a4bfbd4db9542be8c7aedca2d63f, type: 2}
     - target: {fileID: 5133328597473138732, guid: 6b77c7a57b2c2254aa6348f9417c5569, type: 3}
       propertyPath: glyph
       value: 
