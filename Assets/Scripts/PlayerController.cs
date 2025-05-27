@@ -347,5 +347,49 @@ public class PlayerController : MonoBehaviour
         Time.timeScale = 1f;
     }
 
+    // Method to show notifications to the player
+    public void ShowNotification(string message)
+    {
+        Debug.Log($"[NOTIFICATION] {message}");
+        // You can implement a UI notification system here
+        // For example, instantiate a text popup that fades out
+        
+        // Create a simple text popup at the player's position
+        GameObject textPopup = Instantiate(playerTakeDamagePopUp, transform.position + Vector3.up * 1.5f, Quaternion.identity);
+        if (textPopup != null)
+        {
+            // Set the text content
+            TextMesh textMesh = textPopup.GetComponentInChildren<TextMesh>();
+            if (textMesh != null)
+            {
+                textMesh.text = message;
+                textMesh.color = Color.yellow; // Use a different color for notifications
+            }
+            
+            // Destroy the popup after a delay
+            Destroy(textPopup, 2.0f);
+        }
+    }
 
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        // Check if player entered a level exit
+        if (collision.CompareTag("LevelExit"))
+        {
+            // Load the next level
+            LevelManager.Instance.LoadNextLevel();
+        }
+    }
+    
+    public void Die()
+    {
+        // Tell the LevelManager that the player died
+        LevelManager.Instance.PlayerDied();
+    }
+    
+    // Call this method when player health reaches 0
+    public void OnHealthDepleted()
+    {
+        Die();
+    }
 }

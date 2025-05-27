@@ -117,13 +117,24 @@ public class Weapon : MonoBehaviour
             {
                 Debug.Log($"[AST DEBUG] Using action card: {actionCard.name}");
                 actionCard.Use(position, rotation);
+                float fireCost = 0;
                 while (!(SharedState.persistentCards[Index] is ActionCards))
                 {
                     if (SharedState.persistentCards[Index] != null)
                     {
                         curCard = (AuxCards)SharedState.persistentCards[Index];
                         Debug.Log($"[AST DEBUG] Applying aux card: {curCard.getCardName()} to action card: {actionCard.name}");
-                        curCard.applyMod(actionCard);
+                        bool modApplied = curCard.applyMod(actionCard);
+                        if (modApplied) {
+                            fireCost += curCard.getDelay();
+                        } else {
+                            Debug.Log($"[AST DEBUG] Failed to apply aux card: {curCard.getCardName()} - likely a path modifier conflict");
+                            // Optional: Show feedback to the player that the card was rejected
+                            // e.g., spawn a temporary text notification
+                            if (player != null && player.GetComponent<PlayerController>() != null) {
+                                player.GetComponent<PlayerController>().ShowNotification($"Can't apply {curCard.getCardName()}: Path modifier already exists");
+                            }
+                        }
                     }
 
                     if (Index < SharedState.persistentCards.Count - 1)
@@ -167,8 +178,17 @@ public class Weapon : MonoBehaviour
                             {
                                 curCard = (AuxCards)SharedState.persistentCards[Index];
                                 Debug.Log($"[AST DEBUG] Applying aux card: {curCard.getCardName()} to action card: {actionCard.name}");
-                                curCard.applyMod(actionCard);
-                                fireCost += curCard.getDelay();
+                                bool modApplied = curCard.applyMod(actionCard);
+                                if (modApplied) {
+                                    fireCost += curCard.getDelay();
+                                } else {
+                                    Debug.Log($"[AST DEBUG] Failed to apply aux card: {curCard.getCardName()} - likely a path modifier conflict");
+                                    // Optional: Show feedback to the player that the card was rejected
+                                    // e.g., spawn a temporary text notification
+                                    if (player != null && player.GetComponent<PlayerController>() != null) {
+                                        player.GetComponent<PlayerController>().ShowNotification($"Can't apply {curCard.getCardName()}: Path modifier already exists");
+                                    }
+                                }
                             }
 
                             if (Index < SharedState.persistentCards.Count - 1)

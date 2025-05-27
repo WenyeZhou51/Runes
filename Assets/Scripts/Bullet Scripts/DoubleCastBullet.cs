@@ -7,7 +7,7 @@ public class DoubleCastBullet : Bullet
     // This is just a dummy bullet for visual representation
     // The actual effect is handled by the DoubleCastCard script
     
-    private void Awake()
+    protected override void Awake()
     {
         base.Awake();
         // Destroy instantly as this is just a visual cue

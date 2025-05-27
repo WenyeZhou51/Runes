@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class OrbitScript : MonoBehaviour
+public class OrbitScript : PathModifier
 {
     private GameObject player;
     private Rigidbody2D rb;
@@ -17,10 +17,26 @@ public class OrbitScript : MonoBehaviour
         player = GameObject.FindWithTag("Player");
         rb = GetComponent<Rigidbody2D>();
         creationTime = Time.time;
+        
+        // Check if there's already a path modifier
+        if (HasPathModifier(gameObject))
+        {
+            // If this is not the first path modifier, remove this component
+            PathModifier existingModifier = gameObject.GetComponent<PathModifier>();
+            if (existingModifier != this)
+            {
+                Debug.Log("Rejected OrbitScript: Another path modifier already exists");
+                Destroy(this);
+                return;
+            }
+        }
     }
 
     private void Start()
     {
+        // If this component was destroyed in Awake, don't proceed
+        if (this == null) return;
+        
         // Store the initial velocity magnitude before changing it
         float initialSpeed = rb.velocity.magnitude;
         

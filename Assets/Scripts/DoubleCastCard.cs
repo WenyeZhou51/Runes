@@ -241,8 +241,17 @@ public class DoubleCastCard : ActionCards
             {
                 AuxCards auxCard = (AuxCards)weapon.cards[currentIndex];
                 Debug.Log($"[AST DEBUG] [DoubleCast-{instanceId}] Applying AuxCard {auxCard.getCardName()} at index {currentIndex} to second action card {secondAction.name}");
-                auxCard.applyMod(secondAction);
-                auxCardsApplied++;
+                bool modApplied = auxCard.applyMod(secondAction);
+                if (modApplied) {
+                    auxCardsApplied++;
+                } else {
+                    Debug.Log($"[AST DEBUG] [DoubleCast-{instanceId}] Failed to apply aux card: {auxCard.getCardName()} - likely a path modifier conflict");
+                    // Optional: Show feedback to the player that the card was rejected
+                    GameObject player = GameObject.FindGameObjectWithTag("Player");
+                    if (player != null && player.GetComponent<PlayerController>() != null) {
+                        player.GetComponent<PlayerController>().ShowNotification($"Can't apply {auxCard.getCardName()}: Path modifier already exists");
+                    }
+                }
             }
             else if (weapon.cards[currentIndex] != null)
             {

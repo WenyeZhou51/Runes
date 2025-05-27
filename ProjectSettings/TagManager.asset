@@ -8,6 +8,9 @@ TagManager:
   - PlayerBullet
   - Wall
   - Glyph
+  - LevelExit
+  - Room
+  - Door
   layers:
   - Default
   - TransparentFX
