@@ -10,6 +10,11 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
     [Header("Level Exit")]
     [SerializeField] private GameObject levelExitPrefab;
 
+    [Header("Player Spawning")]
+    [SerializeField] private bool movePlayerToSpawnRoom = true;
+    [SerializeField] private string playerTag = "Player";
+    [SerializeField] private bool moveCameraWithPlayer = true;
+
     [Header("Enemy Prefabs")]
     [SerializeField] private GameObject[] basicEnemyPrefabs;
     [SerializeField] private GameObject[] eliteEnemyPrefabs;
@@ -37,7 +42,13 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
 
     public override void Run(DungeonGeneratorLevelGrid2D level)
     {
-        // First, setup room controllers to handle door locking
+        // First, move player to spawn room
+        if (movePlayerToSpawnRoom)
+        {
+            MovePlayerToSpawnRoom(level);
+        }
+
+        // Then setup room controllers to handle door locking
         SetupRoomControllers(level);
 
         if (basicEnemyPrefabs == null || basicEnemyPrefabs.Length == 0)
@@ -83,6 +94,70 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
 
         // Add level exit to the last room
         AddLevelExit(level);
+    }
+
+    private void MovePlayerToSpawnRoom(DungeonGeneratorLevelGrid2D level)
+    {
+        // Find the player
+        GameObject player = GameObject.FindGameObjectWithTag(playerTag);
+        if (player == null)
+        {
+            Debug.LogWarning($"No player found with tag '{playerTag}'. Player will not be moved to spawn room.");
+            return;
+        }
+
+        // Find the spawn room
+        RoomInstanceGrid2D spawnRoom = null;
+        foreach (var roomInstance in level.RoomInstances)
+        {
+            if (roomInstance.IsCorridor) continue;
+
+            // Check if this is the spawn room by name or tag
+            if (roomInstance.Room.GetDisplayName().ToLower().Contains("spawn"))
+            {
+                spawnRoom = roomInstance;
+                break;
+            }
+        }
+
+        // If no spawn room found, use the first room
+        if (spawnRoom == null)
+        {
+            spawnRoom = level.RoomInstances.FirstOrDefault(r => !r.IsCorridor);
+            if (spawnRoom != null)
+            {
+                Debug.LogWarning("No spawn room found, using first available room for player spawn.");
+            }
+        }
+
+        if (spawnRoom == null)
+        {
+            Debug.LogError("No rooms available for player spawning!");
+            return;
+        }
+
+        // Calculate spawn position (center of the room)
+        Bounds roomBounds = GetRoomBounds(spawnRoom.RoomTemplateInstance);
+        Vector3 spawnPosition = roomBounds.center;
+        spawnPosition.z = player.transform.position.z; // Preserve player's Z position
+
+        // Move player to spawn position
+        player.transform.position = spawnPosition;
+
+        Debug.Log($"Player moved to spawn room at position: {spawnPosition}");
+
+        // Move camera if enabled
+        if (moveCameraWithPlayer)
+        {
+            Camera mainCamera = Camera.main;
+            if (mainCamera != null)
+            {
+                Vector3 cameraPosition = spawnPosition;
+                cameraPosition.z = mainCamera.transform.position.z; // Preserve camera's Z position
+                mainCamera.transform.position = cameraPosition;
+                Debug.Log($"Camera moved to follow player at position: {cameraPosition}");
+            }
+        }
     }
 
     private void SetupRoomControllers(DungeonGeneratorLevelGrid2D level)
