@@ -73,6 +73,12 @@ namespace BulletHell
             Interval = CoolOffTime + 0.25f;      // Start with a delay to allow time for scene to load
             Camera = Camera.main;
             
+            Debug.Log($"[ProjectileEmitterBase] {gameObject.name} Awake - Camera.main: {(Camera != null ? Camera.name : "NULL")} in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+            if (Camera != null)
+            {
+                Debug.Log($"[ProjectileEmitterBase] Camera position: {Camera.transform.position}, enabled: {Camera.enabled}, gameObject active: {Camera.gameObject.activeInHierarchy}");
+            }
+            
             ContactFilter = new ContactFilter2D
             {
                 layerMask = LayerMask,
@@ -100,6 +106,10 @@ namespace BulletHell
 
         public void UpdateEmitter(float tick)
         {
+            Debug.Log($"[ProjectileEmitterBase] {gameObject.name} - UpdateEmitter() called with tick: {tick:F4}, AutoFire: {AutoFire}, enabled: {enabled}, active: {gameObject.activeSelf}");
+            
+            int projectileCountBefore = ActiveProjectileCount;
+            
             if (AutoFire)
             {
                 Interval -= tick;
@@ -112,7 +122,6 @@ namespace BulletHell
                     Interval -= tick;
                 }
             }
-
 
             if (IsFixedTimestep)
             {
@@ -141,6 +150,7 @@ namespace BulletHell
                         while (ProjectilesWaiting > 0)
                         {
                             ProjectilesWaiting--;
+                            Debug.Log($"[ProjectileEmitterBase] {gameObject.name} - Firing projectile (fixed timestep), ProjectilesWaiting: {ProjectilesWaiting}");
                             FireProjectile(Direction, ProjectilesWaiting * FixedTimestepRate);
                         }
                     }
@@ -166,10 +176,14 @@ namespace BulletHell
                     {
                         float leakedTime = Mathf.Abs(Interval);
                         Interval += CoolOffTime;
+                        Debug.Log($"[ProjectileEmitterBase] {gameObject.name} - Firing projectile (variable timestep), Interval: {Interval:F4}, CoolOffTime: {CoolOffTime:F4}");
                         FireProjectile(Direction, leakedTime);
                     }
                 }
             }
+            
+            int projectileCountAfter = ActiveProjectileCount;
+            Debug.Log($"[ProjectileEmitterBase] {gameObject.name} - UpdateEmitter() complete: {projectileCountBefore} -> {projectileCountAfter} projectiles, PrefabIndex: {ProjectilePrefab?.Index}");
         }
 
         // Function to rotate a vector by x degrees
@@ -200,7 +214,15 @@ namespace BulletHell
             //Update camera planes if needed
             if (CullProjectilesOutsideCameraBounds)
             {
-                GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
+                if (Camera == null)
+                {
+                    Debug.LogWarning($"[ProjectileEmitterBase] {gameObject.name} - Camera is NULL during frustum culling! Scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+                }
+                else
+                {
+                    GeometryUtility.CalculateFrustumPlanes(Camera, Planes);
+                    Debug.Log($"[ProjectileEmitterBase] {gameObject.name} - Calculated frustum planes using camera: {Camera.name}");
+                }
             }
 
             int previousIndexCount = ActiveProjectileIndexesPosition;

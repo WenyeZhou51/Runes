@@ -51,6 +51,13 @@ public class Enemy : MonoBehaviour
     }
     private void Start()
     {
+        Debug.Log($"[Enemy] {gameObject.name} starting in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+        Debug.Log($"[Enemy] ProjectileManager instance exists: {ProjectileManager.Instance != null}");
+        Debug.Log($"[Enemy] Emitter component found: {emitter != null}");
+        if (emitter != null)
+        {
+            Debug.Log($"[Enemy] Emitter AutoFire: {emitter.AutoFire}, Enabled: {emitter.enabled}");
+        }
         //ProjectileManager.Instance.AddEmitter(GetComponent<ProjectileEmitterAdvanced>(), 1000);
     }
 

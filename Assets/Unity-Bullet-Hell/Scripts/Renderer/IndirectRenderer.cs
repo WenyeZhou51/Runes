@@ -80,6 +80,25 @@ namespace BulletHell
 
         public void Draw(int activeProjectileCount)
         {
+            Debug.Log($"[IndirectRenderer] Draw() called with {activeProjectileCount} projectiles, hardLimit: {hardLimit}, Mesh: {(Mesh != null ? Mesh.name : "NULL")}, Material: {(Material != null ? Material.name : "NULL")}");
+            
+            if (activeProjectileCount <= 0)
+            {
+                Debug.Log($"[IndirectRenderer] Skipping draw - no active projectiles");
+                return;
+            }
+            
+            if (Mesh == null)
+            {
+                Debug.LogError($"[IndirectRenderer] Cannot draw - Mesh is NULL!");
+                return;
+            }
+            
+            if (Material == null)
+            {
+                Debug.LogError($"[IndirectRenderer] Cannot draw - Material is NULL!");
+                return;
+            }
             
             // Update our compute buffers with latest data 
             TransformBuffer.SetData(TransformData, 0, 0, hardLimit);
@@ -88,8 +107,12 @@ namespace BulletHell
             args[1] = (uint)activeProjectileCount;
             ArgsBuffer.SetData(args);
 
+            Debug.Log($"[IndirectRenderer] Calling Graphics.DrawMeshInstancedIndirect with {activeProjectileCount} instances");
+            
             // Instruct the GPU to draw
             Graphics.DrawMeshInstancedIndirect(Mesh, 0, Material, new Bounds(Vector3.zero, new Vector3(100.0f, 100.0f, 100.0f)), ArgsBuffer);
+            
+            Debug.Log($"[IndirectRenderer] Graphics.DrawMeshInstancedIndirect completed");
         }
 
         // Cleanup

@@ -94,6 +94,11 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
 
         // Add level exit to the last room
         AddLevelExit(level);
+        
+        // CRITICAL: Re-register emitters after spawning new enemies
+        // The dungeon generation process destroys the original emitters that were registered during scene load
+        Debug.Log("[EnemyGenerationSystem] Re-registering emitters after enemy spawning");
+        BulletHell.ProjectileManager.Instance.RegisterEmitters();
     }
 
     private void MovePlayerToSpawnRoom(DungeonGeneratorLevelGrid2D level)
