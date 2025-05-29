@@ -65,7 +65,6 @@ namespace BulletHell
             {
                 // Grab a list of Projectile Types founds in assets folder "ProjectilePrefabs"
                 GameObject[] projectileTypes = Resources.LoadAll<GameObject>("ProjectilePrefabs");
-                Debug.Log("loaded projectileprefabs");
                 ProjectilePrefabs = new List<ProjectilePrefab>();
                 IndirectRenderers = new Dictionary<int, IndirectRenderer>();
                 ProjectileTypeCounters = new Dictionary<int, ProjectileTypeCounters>();
@@ -115,34 +114,24 @@ namespace BulletHell
             EmitterCount++;
         }
 
-
-
         public void RegisterEmitters()
         {
-            // Register Emitters that are currently in the scene
-            Debug.Log("registering emitters");
-            
-            // CRITICAL FIX: Clear the entire EmittersArray and reset EmitterCount
+            // Clear all emitter slots first
             for (int i = 0; i < EmittersArray.Length; i++)
             {
                 EmittersArray[i] = null;
             }
-            EmitterCount = 0;
-            
-            ProjectileEmitterBase[] emittersTemp = GameObject.FindObjectsOfType<ProjectileEmitterBase>();
 
-            Debug.Log($"[ProjectileManager] Found {emittersTemp.Length} emitters in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
+            ProjectileEmitterBase[] emittersTemp = FindObjectsOfType<ProjectileEmitterBase>();
 
             for (int n = 0; n < emittersTemp.Length; n++)
             {
                 if (n >= EmittersArray.Length)
                 {
-                    Debug.LogError($"[ProjectileManager] Too many emitters ({emittersTemp.Length}) for MaxEmitters ({MaxEmitters}). Some emitters will not be registered!");
                     break;
                 }
                 
                 EmittersArray[n] = emittersTemp[n];
-                Debug.Log($"[ProjectileManager] Registering emitter {n}: {emittersTemp[n].gameObject.name}");
                 // Default projectile if no projectile type set
                 if (EmittersArray[n].ProjectilePrefab == null)
                     EmittersArray[n].ProjectilePrefab = GetProjectilePrefab(0);
@@ -150,8 +139,6 @@ namespace BulletHell
                 // Increment group counter
                 ProjectileTypeCounters[EmittersArray[n].ProjectilePrefab.Index].TotalGroups++;
             }
-            
-            Debug.Log($"[ProjectileManager] Successfully registered {emittersTemp.Length} emitters, cleared {MaxEmitters - emittersTemp.Length} stale slots");
 
             // Initialize the emitters -- if value is set fo projectilePoolSize -- system will use it
             // Make sure to not assign projectilePoolSize larger than total material type projectile count
@@ -163,7 +150,6 @@ namespace BulletHell
 
                     if (projectilesToAssign == -1)
                     {
-                        //EmittersArray[n].ProjectilePoolSize = 1000;
                         projectilesToAssign = 1000;
                     }
                     EmittersArray[n].Initialize(projectilesToAssign);
@@ -173,12 +159,7 @@ namespace BulletHell
                     
                 }
             }
-
- 
-
         }
-
-
 
         public ProjectilePrefab GetProjectilePrefab(int index)
         {
@@ -189,7 +170,6 @@ namespace BulletHell
             }
             return ProjectilePrefabs[index];
         }
-
 
         public void UpdateBufferData(ProjectilePrefab projectileType, ProjectileData data)
         {
@@ -214,7 +194,6 @@ namespace BulletHell
             //    RegisterEmitter(go.GetComponent<ProjectileEmitterAdvanced>());
             //}
 
-
             // Provides a simple way to update active Emitters if removing/adding them at runtime for debugging purposes
             // You should be using AddEmitter() if you want to add Emitters at runtime (See above comment).
 
@@ -225,78 +204,51 @@ namespace BulletHell
           
         public void UpdateEmitters()
         {
-            // First, let's check if our registered emitters still exist
-            int registeredEmitterCount = 0;
-            for (int i = 0; i < EmittersArray.Length; i++)
-            {
-                if (EmittersArray[i] != null)
-                {
-                    registeredEmitterCount++;
-                }
-            }
-            Debug.Log($"[ProjectileManager] UpdateEmitters() start - {registeredEmitterCount} registered emitters still exist");
-            
-            //reset
-            for (int n = 0; n < ProjectilePrefabs.Count; n++)
-            {
-                ProjectileTypeCounters[n].ActiveProjectiles = 0;
-                ProjectilePrefabs[n].ResetBufferIndex();
-            }
-
-            Debug.Log($"[ProjectileManager] UpdateEmitters() - Processing {EmittersArray.Length} emitter slots, scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
-            
             int activeEmitterCount = 0;
             int totalActiveProjectiles = 0;
             int nullEmitterCount = 0;
             int inactiveGameObjectCount = 0;
             int disabledComponentCount = 0;
+            
+            // Reset projectile counters and buffer indices
+            for (int n = 0; n < ProjectileTypeCounters.Count; n++)
+            {
+                ProjectileTypeCounters[n].ActiveProjectiles = 0;
+            }
+            
+            for (int n = 0; n < ProjectilePrefabs.Count; n++)
+            {
+                ProjectilePrefabs[n].ResetBufferIndex();
+            }
 
+            // Update all emitters
             for (int n = 0; n < EmittersArray.Length; n++)
             {
                 if (EmittersArray[n] != null)
                 {
-                    bool gameObjectActive = EmittersArray[n].gameObject.activeSelf;
-                    bool componentEnabled = EmittersArray[n].enabled;
-                    bool isActive = gameObjectActive && componentEnabled;
-                    
-                    if (!gameObjectActive)
+                    if (!EmittersArray[n].gameObject.activeInHierarchy)
                     {
                         inactiveGameObjectCount++;
-                        Debug.Log($"[ProjectileManager] Emitter {n} ({EmittersArray[n].gameObject.name}) has inactive GameObject");
+                        continue;
                     }
                     
-                    if (!componentEnabled)
+                    if (!EmittersArray[n].enabled)
                     {
                         disabledComponentCount++;
-                        Debug.Log($"[ProjectileManager] Emitter {n} ({EmittersArray[n].gameObject.name}) has disabled component");
+                        continue;
                     }
                     
-                    if (isActive)
+                    if (EmittersArray[n].gameObject.activeInHierarchy && EmittersArray[n].enabled)
                     {
                         activeEmitterCount++;
                         
-                        // Store count before update
-                        int countBefore = EmittersArray[n].ActiveProjectileCount;
-                        
                         EmittersArray[n].UpdateEmitter(Time.deltaTime);
-                        
-                        // Store count after update
-                        int countAfter = EmittersArray[n].ActiveProjectileCount;
-                        
-                        if (countAfter > 0)
-                        {
-                            Debug.Log($"[ProjectileManager] Emitter {n} ({EmittersArray[n].gameObject.name}): {countBefore} -> {countAfter} projectiles, PrefabIndex: {EmittersArray[n].ProjectilePrefab?.Index}");
-                        }
 
                         // Update projectile counters
                         if (EmittersArray[n].ProjectilePrefab != null)
                         {
                             ProjectileTypeCounters[EmittersArray[n].ProjectilePrefab.Index].ActiveProjectiles += EmittersArray[n].ActiveProjectileCount;
                             totalActiveProjectiles += EmittersArray[n].ActiveProjectileCount;
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"[ProjectileManager] Emitter {n} ({EmittersArray[n].gameObject.name}) has NULL ProjectilePrefab!");
                         }
 
                         // update outlines
@@ -309,36 +261,16 @@ namespace BulletHell
                     nullEmitterCount++;
                 }
             }
-            
-            Debug.Log($"[ProjectileManager] UpdateEmitters() complete - {activeEmitterCount} active emitters, {totalActiveProjectiles} total projectiles");
-            Debug.Log($"[ProjectileManager] Emitter status: {nullEmitterCount} null, {inactiveGameObjectCount} inactive GameObjects, {disabledComponentCount} disabled components");
         }
 
         public void DrawEmitters()
         {
-            Debug.Log($"[ProjectileManager] DrawEmitters() - Processing {ProjectilePrefabs.Count} projectile types, scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
-            
-            int totalDrawnProjectiles = 0;
-            
             // We draw all emitters at the same time based on their Projectile Type.  1 draw call per projectile type.
             for (int n = 0; n < ProjectilePrefabs.Count; n++)
             {
                 int activeProjectiles = ProjectileTypeCounters[ProjectilePrefabs[n].Index].ActiveProjectiles;
-                totalDrawnProjectiles += activeProjectiles;
-                
-                if (activeProjectiles > 0)
-                {
-                    Debug.Log($"[ProjectileManager] Drawing {activeProjectiles} projectiles for type {n} (Index: {ProjectilePrefabs[n].Index}) in scene: {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}");
-                }
-                else
-                {
-                    Debug.Log($"[ProjectileManager] Type {n} (Index: {ProjectilePrefabs[n].Index}) has 0 active projectiles - skipping draw");
-                }
-                
-                IndirectRenderers[ProjectilePrefabs[n].Index].Draw(ProjectileTypeCounters[ProjectilePrefabs[n].Index].ActiveProjectiles);
+                IndirectRenderers[ProjectilePrefabs[n].Index].Draw(activeProjectiles);
             }
-            
-            Debug.Log($"[ProjectileManager] DrawEmitters() complete - Drew {totalDrawnProjectiles} total projectiles");
         }
         
         void OnGUI()

@@ -219,7 +219,7 @@ namespace BulletHell
                         }
                         else
                         {
-                            Debug.Log("Error: Projectile was fired before list of active projectiles was refreshed.");
+                            // Error: Projectile was fired before list of active projectiles was refreshed.
                         }
 
                         UpdateProjectile(ref node, leakedTime);

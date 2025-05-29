@@ -72,47 +72,25 @@ namespace BulletHell
                 if (!StaticColor)
                     ColorData[index] = new Vector4(data.Color.r, data.Color.g, data.Color.b, data.Color.a);
             }
-            else
-            {
-                Debug.Log("Error: Initialized more projectiles than Projectile Type allows.");
-            }
         }
 
         public void Draw(int activeProjectileCount)
         {
-            Debug.Log($"[IndirectRenderer] Draw() called with {activeProjectileCount} projectiles, hardLimit: {hardLimit}, Mesh: {(Mesh != null ? Mesh.name : "NULL")}, Material: {(Material != null ? Material.name : "NULL")}");
-            
-            if (activeProjectileCount <= 0)
-            {
-                Debug.Log($"[IndirectRenderer] Skipping draw - no active projectiles");
+            if (activeProjectileCount <= 0 || Mesh == null || Material == null)
                 return;
-            }
             
-            if (Mesh == null)
-            {
-                Debug.LogError($"[IndirectRenderer] Cannot draw - Mesh is NULL!");
-                return;
-            }
+            // Only upload data for active projectiles instead of the entire buffer
+            int uploadCount = Mathf.Min(activeProjectileCount, hardLimit);
             
-            if (Material == null)
-            {
-                Debug.LogError($"[IndirectRenderer] Cannot draw - Material is NULL!");
-                return;
-            }
-            
-            // Update our compute buffers with latest data 
-            TransformBuffer.SetData(TransformData, 0, 0, hardLimit);
+            TransformBuffer.SetData(TransformData, 0, 0, uploadCount);
             if (!StaticColor)
-                ColorBuffer.SetData(ColorData, 0, 0, hardLimit);
+                ColorBuffer.SetData(ColorData, 0, 0, uploadCount);
+                
             args[1] = (uint)activeProjectileCount;
             ArgsBuffer.SetData(args);
 
-            Debug.Log($"[IndirectRenderer] Calling Graphics.DrawMeshInstancedIndirect with {activeProjectileCount} instances");
-            
             // Instruct the GPU to draw
             Graphics.DrawMeshInstancedIndirect(Mesh, 0, Material, new Bounds(Vector3.zero, new Vector3(100.0f, 100.0f, 100.0f)), ArgsBuffer);
-            
-            Debug.Log($"[IndirectRenderer] Graphics.DrawMeshInstancedIndirect completed");
         }
 
         // Cleanup
