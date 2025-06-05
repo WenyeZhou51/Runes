@@ -193,10 +193,21 @@ public class Enemy : MonoBehaviour
 
 
     }
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.CompareTag("PlayerBullet")) {
-            takeDamage(collision.gameObject.GetComponent<Bullet>().damage);
+        if (collision.gameObject.CompareTag("PlayerProjectile")) {
+            // Handle both Bullet component (for older bullet system) and ProjectileController (for newer system)
+            Bullet bulletComponent = collision.gameObject.GetComponent<Bullet>();
+            ProjectileController projectileComponent = collision.gameObject.GetComponent<ProjectileController>();
+            
+            if (bulletComponent != null) {
+                takeDamage(bulletComponent.damage);
+            } else if (projectileComponent != null) {
+                takeDamage((int)projectileComponent.damage);
+            }
+            
+            // Destroy the projectile
+            Destroy(collision.gameObject);
         }
         
     }
@@ -207,7 +218,7 @@ public class Enemy : MonoBehaviour
             health -= damage;
             GameObject popUp = Instantiate(PopUp);
             popUp.GetComponent<DamagePopUp>().damageNum = damage;
-            popUp.GetComponent<RectTransform>().localPosition = this.transform.position + 0.5f * Vector3.up;
+            popUp.GetComponent<RectTransform>().position = this.transform.position + 0.5f * Vector3.up;
             if (health <= 0) { die(); }
         }
         else {

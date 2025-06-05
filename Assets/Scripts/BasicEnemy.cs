@@ -14,6 +14,7 @@ public class BasicEnemy : MonoBehaviour
     
     [Header("References")]
     public GameObject attackEffect;
+    public GameObject PopUp;  // Add damage popup reference
     
     private Transform player;
     private float lastAttackTime;
@@ -113,6 +114,14 @@ public class BasicEnemy : MonoBehaviour
     {
         health -= damageAmount;
         
+        // Create damage popup if PopUp prefab is assigned
+        if (PopUp != null)
+        {
+            GameObject popUp = Instantiate(PopUp);
+            popUp.GetComponent<DamagePopUp>().damageNum = (int)damageAmount;
+            popUp.GetComponent<RectTransform>().position = this.transform.position + 0.5f * Vector3.up;
+        }
+        
         // Flash red when hit
         StartCoroutine(FlashRed());
         
@@ -135,6 +144,26 @@ public class BasicEnemy : MonoBehaviour
         
         // Destroy the enemy
         Destroy(gameObject);
+    }
+    
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        // Check for player projectiles
+        if (collision.CompareTag("PlayerProjectile"))
+        {
+            // Handle both Bullet component (for older bullet system) and ProjectileController (for newer system)
+            Bullet bulletComponent = collision.gameObject.GetComponent<Bullet>();
+            ProjectileController projectileComponent = collision.gameObject.GetComponent<ProjectileController>();
+            
+            if (bulletComponent != null) {
+                TakeDamage(bulletComponent.damage);
+            } else if (projectileComponent != null) {
+                TakeDamage(projectileComponent.damage);
+            }
+            
+            // Destroy the projectile
+            Destroy(collision.gameObject);
+        }
     }
     
     private void OnDrawGizmosSelected()

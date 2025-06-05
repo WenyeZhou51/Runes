@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: Zone 1 generation
   m_EditorClassIdentifier: 
   levelExitPrefab: {fileID: 1618909956263525066, guid: 2ba910ac0b19e414eb34af3a1a9e1bb0, type: 3}
+  movePlayerToSpawnRoom: 1
+  playerTag: Player
+  moveCameraWithPlayer: 1
   basicEnemyPrefabs:
   - {fileID: 5579213194903407863, guid: a5e4878f18ba9d5429e67f6f6cd0412c, type: 3}
   eliteEnemyPrefabs:
   - {fileID: 5579213194903407863, guid: ce6cefbfc4f247848aad20df64d5371e, type: 3}
   bossEnemyPrefabs:
   - {fileID: 5579213194903407863, guid: fd61dce6ce866aa4db56aada08c307ad, type: 3}
-  minEnemiesPerRoom: 2
-  maxEnemiesPerRoom: 5
+  minEnemiesPerRoom: 1
+  maxEnemiesPerRoom: 3
   minDistanceFromWalls: 1.5
   minDistanceBetweenEnemies: 2
   spawnElitesInNormalRooms: 1

@@ -10,6 +10,7 @@ public class EnemyController : MonoBehaviour
     public Color normalColor = Color.red;
     public Color damagedColor = Color.white;
     public float flashDuration = 0.1f;
+    public GameObject PopUp;  // Add damage popup reference
     
     private SpriteRenderer spriteRenderer;
     private bool isDead = false;
@@ -39,6 +40,7 @@ public class EnemyController : MonoBehaviour
         {
             CircleCollider2D collider = gameObject.AddComponent<CircleCollider2D>();
             collider.radius = 0.5f;
+            collider.isTrigger = true;  // Set as trigger to work with OnTriggerEnter2D
         }
     }
     
@@ -69,6 +71,14 @@ public class EnemyController : MonoBehaviour
         
         health -= damage;
         
+        // Create damage popup if PopUp prefab is assigned
+        if (PopUp != null)
+        {
+            GameObject popUp = Instantiate(PopUp);
+            popUp.GetComponent<DamagePopUp>().damageNum = (int)damage;
+            popUp.GetComponent<RectTransform>().position = this.transform.position + 0.5f * Vector3.up;
+        }
+        
         // Flash effect
         spriteRenderer.color = damagedColor;
         flashTimer = flashDuration;
@@ -98,15 +108,18 @@ public class EnemyController : MonoBehaviour
         // Check for projectiles or player attacks
         if (collision.CompareTag("PlayerProjectile"))
         {
-            // Get damage from the projectile
-            ProjectileController projectile = collision.GetComponent<ProjectileController>();
-            if (projectile != null)
-            {
-                TakeDamage(projectile.damage);
-                
-                // Destroy the projectile
-                Destroy(collision.gameObject);
+            // Handle both Bullet component (for older bullet system) and ProjectileController (for newer system)
+            Bullet bulletComponent = collision.gameObject.GetComponent<Bullet>();
+            ProjectileController projectileComponent = collision.gameObject.GetComponent<ProjectileController>();
+            
+            if (bulletComponent != null) {
+                TakeDamage(bulletComponent.damage);
+            } else if (projectileComponent != null) {
+                TakeDamage(projectileComponent.damage);
             }
+            
+            // Destroy the projectile
+            Destroy(collision.gameObject);
         }
     }
 } 
