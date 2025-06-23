@@ -206,25 +206,82 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
                     GameObject doorObj = new GameObject("Door");
                     doorObj.transform.parent = roomInstance.RoomTemplateInstance.transform;
                     
-                    // Calculate door center position in world space
-                    Vector3 doorCenter = new Vector3(
+                    // Debug logging for door position calculation
+                    if (showDebugGizmos)
+                    {
+                        Debug.Log($"=== Door Position Debug for Room: {roomInstance.RoomTemplateInstance.name} ===");
+                        Debug.Log($"Door Line From: {doorInstance.DoorLine.From}");
+                        Debug.Log($"Door Line To: {doorInstance.DoorLine.To}");
+                        Debug.Log($"Room Instance Position: {roomInstance.Position}");
+                        Debug.Log($"Room Transform Position: {roomInstance.RoomTemplateInstance.transform.position}");
+                        Debug.Log($"Room Transform Local Position: {roomInstance.RoomTemplateInstance.transform.localPosition}");
+                    }
+                    
+                    // Calculate door center position in local coordinates (relative to room template)
+                    Vector3 doorLocalCenter = new Vector3(
                         (doorInstance.DoorLine.From.x + doorInstance.DoorLine.To.x) / 2f,
                         (doorInstance.DoorLine.From.y + doorInstance.DoorLine.To.y) / 2f,
                         0
-                    ) + roomInstance.Position;
+                    );
                     
-                    doorObj.transform.position = doorCenter;
+                    // Check if the room has a Grid component for proper coordinate transformation
+                    Transform tilemapsRoot = roomInstance.RoomTemplateInstance.transform.Find("Tilemaps");
+                    Grid roomGrid = null;
+                    if (tilemapsRoot != null)
+                    {
+                        roomGrid = tilemapsRoot.GetComponent<Grid>();
+                    }
+                    
+                    Vector3 doorWorldCenter;
+                    if (roomGrid != null)
+                    {
+                        // Use Grid's coordinate system for proper transformation
+                        Vector3 gridLocalPos = roomGrid.CellToLocal(Vector3Int.RoundToInt(doorLocalCenter));
+                        doorWorldCenter = roomGrid.transform.TransformPoint(gridLocalPos);
+                        
+                        if (showDebugGizmos)
+                        {
+                            Debug.Log($"Using Grid transformation:");
+                            Debug.Log($"  Grid CellToLocal: {gridLocalPos}");
+                            Debug.Log($"  Grid Transform Position: {roomGrid.transform.position}");
+                            Debug.Log($"  Final World Position (Grid): {doorWorldCenter}");
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: Convert local door position to world position using room's transform
+                        doorWorldCenter = roomInstance.RoomTemplateInstance.transform.TransformPoint(doorLocalCenter);
+                        
+                        if (showDebugGizmos)
+                        {
+                            Debug.Log($"Using Transform.TransformPoint fallback:");
+                            Debug.Log($"  Final World Position (Transform): {doorWorldCenter}");
+                        }
+                    }
+                    
+                    // Additional debug: Compare with old calculation
+                    if (showDebugGizmos)
+                    {
+                        Vector3 oldCalculation = doorLocalCenter + roomInstance.Position;
+                        Vector3 positionDifference = doorWorldCenter - oldCalculation;
+                        Debug.Log($"Door Local Center: {doorLocalCenter}");
+                        Debug.Log($"Old Calculation Result: {oldCalculation}");
+                        Debug.Log($"New Calculation Result: {doorWorldCenter}");
+                        Debug.Log($"Position Difference: {positionDifference} (magnitude: {positionDifference.magnitude})");
+                        Debug.Log($"========================");
+                    }
+                    
+                    doorObj.transform.position = doorWorldCenter;
                     doorObj.tag = "Door";
-                    
-                    // Add door components
-                    SpriteRenderer doorSprite = doorObj.AddComponent<SpriteRenderer>();
-                    doorSprite.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
-                    doorSprite.color = Color.green;
                     
                     // Calculate door length from the door line
                     float doorLength = Vector3.Distance(doorInstance.DoorLine.From, doorInstance.DoorLine.To);
                     if (doorLength == 0) doorLength = 1f; // Minimum door size
                     
+                    // Add door controller first (it will handle sprite creation)
+                    DoorController doorController = doorObj.AddComponent<DoorController>();
+                    
+                    // Add collider after DoorController has been set up
                     BoxCollider2D doorCollider = doorObj.AddComponent<BoxCollider2D>();
                     // Set collider size based on door orientation
                     if (doorInstance.IsHorizontal)
@@ -237,8 +294,7 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
                     }
                     doorCollider.enabled = false;
                     
-                    DoorController doorController = doorObj.AddComponent<DoorController>();
-                    doorController.doorSprite = doorSprite;
+                    // Set the collider reference in the door controller
                     doorController.doorCollider = doorCollider;
                     
                     // Add this door to the room controller
@@ -327,6 +383,14 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
     {
         List<Vector2> spawnPositions = new List<Vector2>();
         
+        // Find the enemies container for this room
+        Transform enemiesContainer = roomObject.transform.Find("Enemies");
+        if (enemiesContainer == null)
+        {
+            Debug.LogError($"Enemies container not found in room {roomObject.name}! Make sure SetupRoomControllers runs before SpawnEnemiesInRoom.");
+            return;
+        }
+        
         for (int i = 0; i < enemyCount; i++)
         {
             Vector2 spawnPos = GetValidSpawnPosition(roomBounds, spawnPositions);
@@ -335,9 +399,19 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
             {
                 GameObject enemyPrefab = SelectEnemyPrefab(roomObject);
                 GameObject enemy = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
-                enemy.transform.SetParent(roomObject.transform);
+                enemy.transform.SetParent(enemiesContainer); // ← FIX: Set parent to enemies container, not room
                 spawnPositions.Add(spawnPos);
+                
+                if (showDebugGizmos)
+                {
+                    Debug.Log($"Spawned enemy {enemy.name} in room {roomObject.name} at position {spawnPos}. Parent: {enemy.transform.parent.name}");
+                }
             }
+        }
+        
+        if (showDebugGizmos)
+        {
+            Debug.Log($"Total enemies spawned in {roomObject.name}: {enemiesContainer.childCount}");
         }
     }
 
@@ -349,12 +423,25 @@ public class EnemyGenerationSystem : DungeonGeneratorPostProcessingGrid2D
             return;
         }
 
+        // Find the enemies container for this room
+        Transform enemiesContainer = roomObject.transform.Find("Enemies");
+        if (enemiesContainer == null)
+        {
+            Debug.LogError($"Enemies container not found in room {roomObject.name}! Make sure SetupRoomControllers runs before SpawnBossInRoom.");
+            return;
+        }
+
         // Spawn boss in the center of the room
         Vector2 spawnPos = roomBounds.center;
         
         GameObject bossPrefab = bossEnemyPrefabs[UnityEngine.Random.Range(0, bossEnemyPrefabs.Length)];
         GameObject boss = Instantiate(bossPrefab, spawnPos, Quaternion.identity);
-        boss.transform.SetParent(roomObject.transform);
+        boss.transform.SetParent(enemiesContainer); // ← FIX: Set parent to enemies container, not room
+        
+        if (showDebugGizmos)
+        {
+            Debug.Log($"Spawned boss {boss.name} in room {roomObject.name} at position {spawnPos}. Parent: {boss.transform.parent.name}");
+        }
     }
 
     private Vector2 GetValidSpawnPosition(Bounds roomBounds, List<Vector2> existingPositions)

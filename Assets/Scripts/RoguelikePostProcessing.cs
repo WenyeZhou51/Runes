@@ -97,20 +97,18 @@ public class RoguelikePostProcessing : DungeonGeneratorPostProcessingGrid2D
                     doorObj.transform.position = child.position;
                     doorObj.tag = "Door";
                     
-                    // Add door components
-                    SpriteRenderer doorSprite = doorObj.AddComponent<SpriteRenderer>();
-                    doorSprite.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
-                    doorSprite.color = Color.green;
-                    
                     // Calculate door length from the From and To positions
                     float doorLength = Vector3.Distance(doorGrid.From, doorGrid.To);
                     
+                    // Add door controller first (it will handle sprite creation)
+                    DoorController doorController = doorObj.AddComponent<DoorController>();
+                    
+                    // Add collider after DoorController has been set up
                     BoxCollider2D doorCollider = doorObj.AddComponent<BoxCollider2D>();
                     doorCollider.size = new Vector2(doorLength, 1);
                     doorCollider.enabled = false;
                     
-                    DoorController doorController = doorObj.AddComponent<DoorController>();
-                    doorController.doorSprite = doorSprite;
+                    // Set the collider reference in the door controller
                     doorController.doorCollider = doorCollider;
                     
                     // Add this door to the room controller

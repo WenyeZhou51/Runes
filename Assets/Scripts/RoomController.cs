@@ -89,16 +89,33 @@ public class RoomController : MonoBehaviour
     {
         activeEnemies.Clear();
         
-        // Only track enemies if we have an enemies container
-        if (enemiesContainer != null)
+        // Modern approach: Find enemies directly in the room by checking for enemy components
+        // This works regardless of whether enemies are in a container or direct children
+        foreach (Transform child in transform)
+        {
+            if (child.gameObject.activeSelf && IsEnemyGameObject(child.gameObject))
+            {
+                activeEnemies.Add(child.gameObject);
+            }
+        }
+        
+        // Fallback: Check the deprecated "Enemies" container approach for backward compatibility
+        if (activeEnemies.Count == 0 && enemiesContainer != null)
         {
             foreach (Transform enemy in enemiesContainer)
             {
-                if (enemy.gameObject.activeSelf)
+                if (enemy.gameObject.activeSelf && IsEnemyGameObject(enemy.gameObject))
                 {
                     activeEnemies.Add(enemy.gameObject);
                 }
             }
+        }
+        
+        // Debug logging for enemy detection
+        Debug.Log($"Room {gameObject.name}: Found {activeEnemies.Count} active enemies (Total children: {transform.childCount})");
+        if (activeEnemies.Count > 0)
+        {
+            Debug.Log($"  Active enemies: {string.Join(", ", activeEnemies.ConvertAll(e => e.name))}");
         }
         
         // If there are no enemies, mark the room as cleared
@@ -106,6 +123,18 @@ public class RoomController : MonoBehaviour
         {
             roomCleared = true;
         }
+    }
+    
+    /// <summary>
+    /// Check if a GameObject is an enemy by looking for enemy components
+    /// </summary>
+    private bool IsEnemyGameObject(GameObject obj)
+    {
+        // Check for any of the enemy component types
+        return obj.GetComponent<Enemy>() != null || 
+               obj.GetComponent<EnemyController>() != null || 
+               obj.GetComponent<BasicEnemy>() != null ||
+               obj.CompareTag("Enemy");
     }
     
     private bool HasEnemies()
