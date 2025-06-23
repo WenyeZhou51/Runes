@@ -104,16 +104,28 @@ public class DoorController : MonoBehaviour
     {
         isLocked = locked;
         
+        Debug.Log($"DoorController.SetLocked({locked}) called on {gameObject.name}");
+        
         // Update the collider
         if (doorCollider != null)
         {
             doorCollider.enabled = locked;
+            Debug.Log($"  Collider enabled: {doorCollider.enabled}, isTrigger: {doorCollider.isTrigger}");
+        }
+        else
+        {
+            Debug.LogWarning($"  doorCollider is NULL! Cannot enable/disable door collision.");
         }
         
         // Update the visual appearance
         if (doorSprite != null)
         {
             doorSprite.color = locked ? lockedColor : unlockedColor;
+            Debug.Log($"  Sprite color changed to: {(locked ? "locked" : "unlocked")} color");
+        }
+        else
+        {
+            Debug.LogWarning($"  doorSprite is NULL! Cannot update door appearance.");
         }
     }
     

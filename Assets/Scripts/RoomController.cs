@@ -159,6 +159,8 @@ public class RoomController : MonoBehaviour
     
     public void SetDoorsLocked(bool locked)
     {
+        Debug.Log($"SetDoorsLocked({locked}) called for room {gameObject.name}. Found {doors.Count} doors.");
+        
         foreach (var door in doors)
         {
             if (door != null)
@@ -167,13 +169,19 @@ public class RoomController : MonoBehaviour
                 DoorController doorController = door.GetComponent<DoorController>();
                 if (doorController != null)
                 {
+                    Debug.Log($"  Door {door.name}: Using DoorController. Collider: {(doorController.doorCollider != null ? "Found" : "NULL")}");
                     doorController.SetLocked(locked);
                 }
                 else
                 {
+                    Debug.Log($"  Door {door.name}: No DoorController, using SetActive({locked})");
                     // Otherwise just enable/disable the door
                     door.SetActive(locked);
                 }
+            }
+            else
+            {
+                Debug.LogWarning($"  Found NULL door in doors list!");
             }
         }
     }
@@ -183,16 +191,28 @@ public class RoomController : MonoBehaviour
     /// </summary>
     public void RefreshDoorsList()
     {
-        if (doors.Count == 0)
+        doors.Clear(); // Clear existing doors to refresh completely
+        
+        // Look for door objects in the room
+        foreach (Transform child in transform)
         {
-            // Look for door objects in the room
-            foreach (Transform child in transform)
+            Debug.Log($"Checking child: {child.name}, tag: {child.tag}");
+            if (child.CompareTag("Door"))
             {
-                if (child.CompareTag("Door"))
+                doors.Add(child.gameObject);
+                Debug.Log($"  Added door: {child.name}");
+                
+                // Check door components
+                DoorController dc = child.GetComponent<DoorController>();
+                Collider2D col = child.GetComponent<Collider2D>();
+                Debug.Log($"  DoorController: {dc != null}, Collider2D: {col != null}");
+                if (col != null)
                 {
-                    doors.Add(child.gameObject);
+                    Debug.Log($"  Collider enabled: {col.enabled}, isTrigger: {col.isTrigger}");
                 }
             }
         }
+        
+        Debug.Log($"RefreshDoorsList completed. Found {doors.Count} doors in room {gameObject.name}");
     }
 } 
