@@ -84,37 +84,7 @@ public class RoguelikePostProcessing : DungeonGeneratorPostProcessingGrid2D
                 roomBounds.size.y * 0.8f
             );
             
-            // Find doors in the room
-            foreach (Transform child in roomInstance.RoomTemplateInstance.transform)
-            {
-                // Look for doors (objects with DoorGrid2D component)
-                DoorGrid2D doorGrid = child.GetComponent<DoorGrid2D>();
-                if (doorGrid != null)
-                {
-                    // Create a door game object at this position
-                    GameObject doorObj = new GameObject("Door");
-                    doorObj.transform.parent = roomInstance.RoomTemplateInstance.transform;
-                    doorObj.transform.position = child.position;
-                    doorObj.tag = "Door";
-                    
-                    // Calculate door length from the From and To positions
-                    float doorLength = Vector3.Distance(doorGrid.From, doorGrid.To);
-                    
-                    // Add door controller first (it will handle sprite creation)
-                    DoorController doorController = doorObj.AddComponent<DoorController>();
-                    
-                    // Add collider after DoorController has been set up
-                    BoxCollider2D doorCollider = doorObj.AddComponent<BoxCollider2D>();
-                    doorCollider.size = new Vector2(doorLength, 1);
-                    doorCollider.enabled = false;
-                    
-                    // Set the collider reference in the door controller
-                    doorController.doorCollider = doorCollider;
-                    
-                    // Add this door to the room controller
-                    roomController.doors.Add(doorObj);
-                }
-            }
+            // Note: Door creation is now handled by EnemyGenerationSystem.cs to avoid duplicate doors
         }
     }
     
